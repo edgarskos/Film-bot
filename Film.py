@@ -241,6 +241,7 @@ u'Cannot change %s because of spam blacklist entry %s'
               wikilinkRegex = re.compile("\[\[.*\|.*\]\]")
               searches = [commentRegex.search(infobox, oldEquals), referenceRegex.search(infobox, oldEquals), templateRegex.search(infobox, oldEquals), wikilinkRegex.search(infobox, oldEquals)] #create an array
               first = len(infobox)
+              tmp = None #default just in case it isn't set inside the next for loop
               #go through all of the possible searches and pick the one that is closes to where I'm actually trying to get data from.  This way I don't have
               #  to try and guess an order for them I just get the one that is the most relevant.
               for search in searches: 
