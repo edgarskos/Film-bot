@@ -214,6 +214,8 @@ u'Cannot change %s because of spam blacklist entry %s'
     def infoboxCleanup(self, infobox):
       infobox = infobox.replace("<br>", "<br />") #convert old style breaks to new style
       infobox = infobox.replace("<br/>", "<br />") #convert old style breaks to new style
+      infobox = infobox.replace("preceded_by", "preceded by") #make sure these have a space in them
+      infobox = infobox.replace("followed_by", "followed by")
       newBox = self.infoboxTemplate
       infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|")
       for field in infoSplit:
@@ -234,15 +236,16 @@ u'Cannot change %s because of spam blacklist entry %s'
               #  I can now find (using rfind) where the last "|" inbetween those equals signs. This allows me to take all the information instead of when
               #  something is wikilinked inside the data. I strip the old data to remove any access whitespace.
               templateRegex = re.compile("{{.*}}") #This is how templates are in wikipedia
-              referenceRegex = re.compile("<ref.*?/(ref)?>")
+              referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
               commentRegex = re.compile("<!--.*?-->")
-              wikilinkRegex = re.compile("\[\[.*\]\]")
+              wikilinkRegex = re.compile("\[\[.*\|.*\]\]")
               searches = [commentRegex.search(infobox, oldEquals), referenceRegex.search(infobox, oldEquals), templateRegex.search(infobox, oldEquals), wikilinkRegex.search(infobox, oldEquals)] #create an array
               first = len(infobox)
               #go through all of the possible searches and pick the one that is closes to where I'm actually trying to get data from.  This way I don't have
               #  to try and guess an order for them I just get the one that is the most relevant.
               for search in searches: 
                 try: 
+                  #pywikibot.output(infobox[search.start():search.end()] + " " + str(search.start()) + " " + str(search.end()))
                   if search.start() < first:
                     first = search.start()
                     tmp = search
@@ -287,7 +290,7 @@ u'Cannot change %s because of spam blacklist entry %s'
                 
               #Break it down: Take everything before where I want to insert the info + the old info I found between the equals sign and the last "|" + everything
               #  after where I insert the data.
-              #pywikibot.output(data)
+              #pywikibot.output(field.split("=")[0] + " " + data)
               newBox = newBox[:equals+2] + data + newBox[equals+2:]
               #pywikibot.output(newBox)
               #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
