@@ -207,15 +207,10 @@ u'Cannot change %s because of spam blacklist entry %s'
         returned += field + "+"
       return re.sub("\+", "<br />", returned.rstrip("+"))
     
-    def removeItalics(self, data):
-      return re.sub("\'", "", data)
-    
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
       infobox = infobox.replace("<br>", "<br />") #convert old style breaks to new style
       infobox = infobox.replace("<br/>", "<br />") #convert old style breaks to new style
-      infobox = infobox.replace("preceded_by", "preceded by") #make sure these have a space in them
-      infobox = infobox.replace("followed_by", "followed by")
       newBox = self.infoboxTemplate
       infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|")
       for field in infoSplit:
@@ -286,8 +281,6 @@ u'Cannot change %s because of spam blacklist entry %s'
               elif(field.split("=")[0].strip().lower() == "runtime") :
                 data = self.removeWikilink(data)
                 data = re.sub("(min(\.)|mins|min|mins\.)$", "minutes", data)
-              elif(field.split("=")[0].strip().lower() == "followed by" or field.split("=")[0].strip().lower() == "preceded by"): #remove italics
-                data = self.removeItalics(data)
                 
               #Break it down: Take everything before where I want to insert the info + the old info I found between the equals sign and the last "|" + everything
               #  after where I insert the data.
@@ -304,11 +297,6 @@ u'Cannot change %s because of spam blacklist entry %s'
         newBox = re.sub("\| image size *=.*?\n", "", newBox)
       if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| narrator *=.*?\n", "", newBox)
-      if re.search("\| followed by *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-        newBox = re.sub("\| followed by *=.*?\n", "", newBox)
-      if re.search("\| preceded by *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-        newBox = re.sub("\| preceded by *=.*?\n", "", newBox)
-      
       
       if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)
@@ -402,7 +390,7 @@ u'Cannot change %s because of spam blacklist entry %s'
       return data
       
     def countryToTemplate(self, data):
-      if(data.strip().lower() == "united states" or data.strip().lower() == "us" or data.strip().lower() == "usa" or data.strip().lower() == "{{usa}}"): #if country is us change to {{filmUS}}
+      if(data.strip().lower() == "united states" or data.strip().lower() == "us" or data.strip().lower() == "usa" or data.strip().lower() == "{{usa}}" or data.strip().lower() == "{{us}}"): #if country is us change to {{filmUS}}
         data = "{{film US}}"
       elif(data.strip().lower() == "canada" or data.strip().lower() == "can"):
         data = "{{film Canada}}"
