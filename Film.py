@@ -267,9 +267,9 @@ u'Cannot change %s because of spam blacklist entry %s'
                 else:
                   data = infobox[oldEquals+1:infobox.rfind("|", oldEquals, infobox.find("=", x))].strip()
               #pywikibot.output(field.split("=")[0].strip().lower() + ": " + data)
-              if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it. Ignore if more than one language is in the field
+              if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
-              elif(field.split("=")[0].strip().lower() == "country" and data.find("<br />") == -1):
+              elif(field.split("=")[0].strip().lower() == "country"):
                 data = self.removeWikilink(data)
                 data = self.countryToTemplate(data)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower()) and data.find("<br />") == -1):
@@ -280,7 +280,7 @@ u'Cannot change %s because of spam blacklist entry %s'
                 data = self.formatDate(data)
               elif(field.split("=")[0].strip().lower() == "runtime") :
                 data = self.removeWikilink(data)
-                data = re.sub("(min(\.)|mins|min|mins\.)$", "minutes", data)
+                data = re.sub("(min(\.)|mins|min|mins\.)(?!utes)", "minutes", data)
                 
               #Break it down: Take everything before where I want to insert the info + the old info I found between the equals sign and the last "|" + everything
               #  after where I insert the data.
