@@ -274,9 +274,9 @@ u'Cannot change %s because of spam blacklist entry %s'
               elif(field.split("=")[0].strip().lower() == "country"):
                 data = self.removeWikilink(data)
                 data = filmfunctions.countryToTemplate(data)
-              elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower()) and data.find("<br />") == -1):
-                data = re.sub("start", "film", data)
-              elif(field.split("=")[0].strip().lower() == "released" and re.search("{{filmdate.*?}}", data.lower()) and data.find("<br />") == -1):
+              elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower())):
+                data = re.sub("start", "film", data, 0, re.I)
+              elif(field.split("=")[0].strip().lower() == "released" and re.search("{{filmdate.*?}}", data.lower())):
                 data = re.sub("filmdate", "film date", data)
               elif(field.split("=")[0].strip().lower() == "released" and not re.search("{{film date.*?}}", data.lower()) and data.find("<br />") == -1):
                 data = self.formatDate(data)
@@ -360,6 +360,7 @@ u'Cannot change %s because of spam blacklist entry %s'
         data = self.removeWikilink(data)
       else:
         data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
+      data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       if(len(re.sub("\([A-Za-z ]+\)", "", data).split()) == 3):
         format = re.sub("[0-9]{1,2}", "%d", re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", re.sub("\([A-Za-z ]+\)", "", data)))) #convert what is in the data field to what format it is in datetime.
         date = datetime.strptime(re.sub("\([A-Za-z ]+\)", "", data), format) #convert to date
