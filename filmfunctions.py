@@ -5,7 +5,7 @@ def countryToTemplate(countries):
   dataSplit = re.sub(", ", "<br />", countries).split("<br />")
   for data in dataSplit:
   
-    if(data.strip().lower() == "united states" or data.strip().lower() == "us" or data.strip().lower() == "usa" or data.strip().lower() == "{{usa}}" or data.strip().lower() == "{{us}}"): #if country is us change to {{filmUS}}
+    if(data.strip().lower() == "united states" or data.strip().lower() == "us" or data.strip().lower() == "usa" or data.strip().lower() == "{{usa}}" or data.strip().lower() == "{{us}}" or data.strip().lower() == "{{flag|usa}}"): #if country is us change to {{filmUS}}
       data = "{{Film US}}"
     elif(data.strip().lower() == "uk" or data.strip().lower() == "united kingdom"):
       data = "{{Film UK}}"

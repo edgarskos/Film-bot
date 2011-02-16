@@ -111,7 +111,7 @@ class BasicBot:
         text = pywikibot.replaceExcept(text, r"{{(Amg title|Amg movie|Allmovie)\|", "{{Allmovie title|", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         
         ####self.imdbNum = 
-        if re.search("{{IMDb title.*?}}", text):
+        if re.subn("{{IMDb title.*?}}", "", text)[1] == 1 : #If there is only 1 imdb link on the page search for the info
           self.imdbNum = re.search("[0-9]{6,7}", re.search("{{IMDb title.*?}}", text).group()).group()
         else:
           self.imdbNum = 0
