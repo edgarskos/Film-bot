@@ -31,6 +31,7 @@ import editarticle
 import sys
 from datetime import datetime
 import imdb
+import filmfunctions
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -103,7 +104,8 @@ class BasicBot:
         #unwiki-link united states
         text = pywikibot.replaceExcept(text, r"\[\[(U|u)nited (S|s)tates\]\]", "United States", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         #unwiki-link film
-        text = pywikibot.replaceExcept(text, r"\[\[(F|f)ilm\]\]", "film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+        text = pywikibot.replaceExcept(text, r"\[\[film\]\]", "film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+        text = pywikibot.replaceExcept(text, r"\[\[Film\]\]", "Film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         text = pywikibot.replaceExcept(text, r"{{(Rottentomatoes|Rotten Tomatoes|Rotten tomatoes)", "{{Rotten-tomatoes", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         text = pywikibot.replaceExcept(text, r"{{(IMDB title|IMDBtitle|IMDb Title|Imdb movie|Imdb title|Imdb-title|Imdbtitle|imdb title)", "{{IMDb title", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         text = pywikibot.replaceExcept(text, r"{{(Amg title|Amg movie|Allmovie)\|", "{{Allmovie title|", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
@@ -271,7 +273,7 @@ u'Cannot change %s because of spam blacklist entry %s'
                 data = self.removeWikilink(data)
               elif(field.split("=")[0].strip().lower() == "country"):
                 data = self.removeWikilink(data)
-                data = self.countryToTemplate(data)
+                data = filmfunctions.countryToTemplate(data)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower()) and data.find("<br />") == -1):
                 data = re.sub("start", "film", data)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{filmdate.*?}}", data.lower()) and data.find("<br />") == -1):
@@ -344,7 +346,7 @@ u'Cannot change %s because of spam blacklist entry %s'
             elif(field.split("=")[0].strip() == "language"):
               if movie.get('language'):
                 for name in movie.get('language'):
-                  data += self.countryToTemplate(name) + "+"
+                  data += filmfunctions.countryToTemplate(name) + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
               
 
@@ -387,29 +389,6 @@ u'Cannot change %s because of spam blacklist entry %s'
         else:
           place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
         data = "{{film date|"+str(date.year)+"| | |"+place+"}}"
-      return data
-      
-    def countryToTemplate(self, data):
-      if(data.strip().lower() == "united states" or data.strip().lower() == "us" or data.strip().lower() == "usa" or data.strip().lower() == "{{usa}}" or data.strip().lower() == "{{us}}"): #if country is us change to {{filmUS}}
-        data = "{{film US}}"
-      elif(data.strip().lower() == "canada" or data.strip().lower() == "can"):
-        data = "{{film Canada}}"
-      elif(data.strip().lower() == "uk" or data.strip().lower() == "united kingdom"):
-        data = "{{film UK}}"
-      elif(data.strip().lower() == "australia"):
-        data = "{{film Australia}}"
-      elif(data.strip().lower() == "china"):
-        data = "{{film China}}"
-      elif(data.strip().lower() == "the netherlands"):
-        data = "{{film Netherlands}}"
-      elif(data.strip().lower() == "germany"):
-        data = "{{film Germany}}"
-      elif(data.strip().lower() == "mexico"):
-        data = "{{film Mexico}}"
-      elif(data.strip().lower() == "france"):
-        data = "{{film France}}"
-      elif(data.strip().lower() == "india" or data.strip().lower() == "{{ind}}"):
-        data = "{{film India}}"
       return data
       
 def main():
