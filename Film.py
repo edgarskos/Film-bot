@@ -342,11 +342,11 @@ u'Cannot change %s because of spam blacklist entry %s'
                   infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + movie.get('runtime')[0] + " minutes" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "country"):
               if movie.get('country'):
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + movie.get('country')[0] + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + filmfunctions.countryToTemplate(movie.get('country')[0]) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "language"):
               if movie.get('language'):
                 for name in movie.get('language'):
-                  data += filmfunctions.countryToTemplate(name) + "+"
+                  data += name + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
               
 
