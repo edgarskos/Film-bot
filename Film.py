@@ -70,6 +70,10 @@ class BasicBot:
         self.generator = generator
         self.dry = dry
         self.imdbNum = 0
+        self.templateRegex = re.compile("{{.*}}") #This is how templates are in wikipedia
+        self.referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
+        self.commentRegex = re.compile("<!--.*?-->")
+        self.wikilinkRegex = re.compile("\[\[.*\|.*\]\]")
         # Set the edit summary message
         self.summary = pywikibot.translate(pywikibot.getSite(), self.msg)
         linktrail = pywikibot.getSite().linktrail()
@@ -232,11 +236,7 @@ u'Cannot change %s because of spam blacklist entry %s'
               #This is silly.  I find where the next equals sign is in the old infobox starting from the equals sign is in the field we're replacing.
               #  I can now find (using rfind) where the last "|" inbetween those equals signs. This allows me to take all the information instead of when
               #  something is wikilinked inside the data. I strip the old data to remove any access whitespace.
-              templateRegex = re.compile("{{.*}}") #This is how templates are in wikipedia
-              referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
-              commentRegex = re.compile("<!--.*?-->")
-              wikilinkRegex = re.compile("\[\[.*\|.*\]\]")
-              searches = [commentRegex.search(infobox, oldEquals), referenceRegex.search(infobox, oldEquals), templateRegex.search(infobox, oldEquals), wikilinkRegex.search(infobox, oldEquals)] #create an array
+              searches = [self.commentRegex.search(infobox, oldEquals), self.referenceRegex.search(infobox, oldEquals), self.templateRegex.search(infobox, oldEquals), self.wikilinkRegex.search(infobox, oldEquals)] #create an array
               first = len(infobox)
               tmp = None #default just in case it isn't set inside the next for loop
               #go through all of the possible searches and pick the one that is closes to where I'm actually trying to get data from.  This way I don't have
@@ -360,6 +360,10 @@ u'Cannot change %s because of spam blacklist entry %s'
         data = self.removeWikilink(data)
       else:
         data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
+      refs = "" #initialize
+      if self.referenceRegex.search(data) : #remove the ref and save it for later so I can format the date
+        refs = data[self.referenceRegex.search(data).start():self.referenceRegex.search(data).end()]
+        data = re.sub(self.referenceRegex, "", data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       if(len(re.sub("\([A-Za-z ]+\)", "", data).split()) == 3):
         format = re.sub("[0-9]{1,2}", "%d", re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", re.sub("\([A-Za-z ]+\)", "", data)))) #convert what is in the data field to what format it is in datetime.
@@ -390,7 +394,7 @@ u'Cannot change %s because of spam blacklist entry %s'
         else:
           place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
         data = "{{film date|"+str(date.year)+"| | |"+place+"}}"
-      return data
+      return data + refs
       
 def main():
     # This factory is responsible for processing command line arguments
