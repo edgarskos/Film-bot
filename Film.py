@@ -362,8 +362,11 @@ u'Cannot change %s because of spam blacklist entry %s'
         data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
       refs = "" #initialize
       if self.referenceRegex.search(data) : #remove the ref and save it for later so I can format the date
-        refs = data[self.referenceRegex.search(data).start():self.referenceRegex.search(data).end()]
+        refs += data[self.referenceRegex.search(data).start():self.referenceRegex.search(data).end()]
         data = re.sub(self.referenceRegex, "", data)
+      if self.commentRegex.search(data) :
+        refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
+        data = re.sub(self.commentRegex, "", data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       if(len(re.sub("\([A-Za-z ]+\)", "", data).split()) == 3):
         format = re.sub("[0-9]{1,2}", "%d", re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", re.sub("\([A-Za-z ]+\)", "", data)))) #convert what is in the data field to what format it is in datetime.
