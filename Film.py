@@ -204,6 +204,13 @@ u'Cannot change %s because of spam blacklist entry %s'
     #remove any possible wikilinks
     def removeWikilink(self, data):
       returned = ""
+      refs = "" #initialize
+      if self.referenceRegex.search(data) : #remove the ref and save it for later so I can format the date
+        refs += data[self.referenceRegex.search(data).start():self.referenceRegex.search(data).end()]
+        data = re.sub(self.referenceRegex, "", data)
+      if self.commentRegex.search(data) :
+        refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
+        data = re.sub(self.commentRegex, "", data)
       dataSplit = re.sub(", ", "<br />", data).split("<br />")
       for field in dataSplit:
         if(re.search("\|.*?\]\]", field)) : 
@@ -211,7 +218,7 @@ u'Cannot change %s because of spam blacklist entry %s'
         elif(re.search("\[\[.*?\]\]", field)):
           field = re.search("\[\[.*?\]\]", field).group().replace("[[", "").replace("]]", "")
         returned += field + "+"
-      return re.sub("\+", "<br />", returned.rstrip("+"))
+      return re.sub("\+", "<br />", returned.rstrip("+")) + refs
     
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
@@ -330,11 +337,11 @@ u'Cannot change %s because of spam blacklist entry %s'
                 for date in movie.get('release date'):
                   data += self.formatDate(date) + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
-            elif(field.split("=")[0].strip() == "writer"):
-              if movie.get('writer'):
-                for name in movie.get('writer'):
-                  data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+            #elif(field.split("=")[0].strip() == "writer"):
+            #  if movie.get('writer'):
+            #    for name in movie.get('writer'):
+            #      data += name['name'] + "+"
+            #    infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "runtime"):
               if movie.get('runtime'):
                 try: infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + movie.get('runtime')[0].split(":")[1] + " minutes" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 

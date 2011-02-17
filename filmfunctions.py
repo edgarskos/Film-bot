@@ -1,6 +1,16 @@
 import re
 
 def countryToTemplate(countries):
+  referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
+  commentRegex = re.compile("<!--.*?-->")
+  refs = "" #initialize
+  if referenceRegex.search(countries) : #remove the ref and save it for later so I can format the date
+    refs += countries[referenceRegex.search(countries).start():referenceRegex.search(countries).end()]
+    countries = re.sub(referenceRegex, "", countries)
+  if commentRegex.search(countries) :
+    refs += countries[commentRegex.search(countries).start():commentRegex.search(countries).end()]
+    countries = re.sub(commentRegex, "", countries)
+
   returned = ""
   dataSplit = re.sub(", ", "<br />", re.sub("<br />", " ", countries)).split("<br />")
   for data in dataSplit:
@@ -183,5 +193,5 @@ def countryToTemplate(countries):
       data = "{{Film Yugoslavia}}"
       
     returned += data + "+"
-    
-  return re.sub("\+", "<br />", returned.rstrip("+"))
+
+  return re.sub("\+", "<br />", returned.rstrip("+")) + refs
