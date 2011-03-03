@@ -204,13 +204,6 @@ class BasicBot:
     #remove any possible wikilinks
     def removeWikilink(self, data):
       returned = ""
-      refs = "" #initialize
-      if self.referenceRegex.search(data) : #remove the ref and save it for later so I can format the date
-        refs += data[self.referenceRegex.search(data).start():self.referenceRegex.search(data).end()]
-        data = re.sub(self.referenceRegex, "", data)
-      if self.commentRegex.search(data) :
-        refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
-        data = re.sub(self.commentRegex, "", data)
       dataSplit = re.sub(", ", "<br />", data).split("<br />")
       for field in dataSplit:
         if(re.search("\|.*?\]\]", field)) : 
@@ -218,7 +211,7 @@ class BasicBot:
         elif(re.search("\[\[.*?\]\]", field)):
           field = re.search("\[\[.*?\]\]", field).group().replace("[[", "").replace("]]", "")
         returned += field + "+"
-      return re.sub("\+", "<br />", returned.rstrip("+")) + refs
+      return re.sub("\+", "<br />", returned.rstrip("+"))
     
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
@@ -276,6 +269,16 @@ class BasicBot:
                 else:
                   data = infobox[oldEquals+1:infobox.rfind("|", oldEquals, infobox.find("=", x))].strip()
               #pywikibot.output(field.split("=")[0].strip().lower() + ": " + data)
+              
+              #This will take care of any references and comments on the data
+              refs = "" #initialize
+              if self.referenceRegex.search(data) : #remove the ref and save it for later so I can format the date
+                refs += data[self.referenceRegex.search(data).start():self.referenceRegex.search(data).end()]
+                data = re.sub(self.referenceRegex, "", data)
+              if self.commentRegex.search(data) :
+                refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
+                data = re.sub(self.commentRegex, "", data)
+              
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
               elif(field.split("=")[0].strip().lower() == "country"):
@@ -290,6 +293,8 @@ class BasicBot:
               elif(field.split("=")[0].strip().lower() == "runtime") :
                 data = self.removeWikilink(data)
                 data = re.sub("(min(\.)|mins|min|mins\.)(?!utes)", "minutes", data)
+                
+              data += refs #attach the references and comments again
                 
               #Break it down: Take everything before where I want to insert the info + the old info I found between the equals sign and the last "|" + everything
               #  after where I insert the data.
@@ -397,13 +402,6 @@ class BasicBot:
         data = self.removeWikilink(data)
       else:
         data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
-      refs = "" #initialize
-      if self.referenceRegex.search(data) : #remove the ref and save it for later so I can format the date
-        refs += data[self.referenceRegex.search(data).start():self.referenceRegex.search(data).end()]
-        data = re.sub(self.referenceRegex, "", data)
-      if self.commentRegex.search(data) :
-        refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
-        data = re.sub(self.commentRegex, "", data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       if(len(re.sub("\([A-Za-z ]+\)", "", data).split()) == 3):
         format = re.sub("[0-9]{1,2}", "%d", re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", re.sub("\([A-Za-z ]+\)", "", data)))) #convert what is in the data field to what format it is in datetime.
@@ -434,8 +432,7 @@ class BasicBot:
         else:
           place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
         data = "{{film date|"+str(date.year)+"| | |"+place+"}}"
-      return data + refs
-      
+      return data      
 def main():
     # This factory is responsible for processing command line arguments
     # that are also used by other scripts and that determine on which pages
