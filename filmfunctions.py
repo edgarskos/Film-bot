@@ -11,9 +11,11 @@ def countryToTemplate(countries):
     refs += countries[commentRegex.search(countries).start():commentRegex.search(countries).end()]
     countries = re.sub(commentRegex, "", countries)
 
+
   returned = ""
-  dataSplit = re.sub(", ", "<br />", re.sub("<br />", " ", countries)).split("<br />")
-  for data in dataSplit:
+  #dataSplit = re.sub(", ", "<br />", re.sub("<br />", " ", countries)).split("<br />")
+
+  for data in countries.split("<br />"):
   
     if(data.strip().lower() == "united states" or data.strip().lower() == "us" or data.strip().lower() == "usa" or data.strip().lower() == "{{usa}}" or data.strip().lower() == "{{us}}" or data.strip().lower() == "{{flag|usa}}"): #if country is us change to {{filmUS}}
       data = "{{Film US}}"
@@ -99,7 +101,7 @@ def countryToTemplate(countries):
       data = "{{Film Israel}}"
     elif data.strip().lower() == "italy" :
       data = "{{Film Italy}}"
-    elif data.strip().lower() == "japan" :
+    elif data.strip().lower() == "japan" or data.strip().lower() == "{{jpn}}":
       data = "{{Film Japan}}"
     elif data.strip().lower() == "kazakhstan" :
       data = "{{Film Kazakhstan}}"

@@ -145,7 +145,7 @@ class BasicBot:
         if not self.save(text, page, self.summary):
           pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
           
-          #pywikibot.output(text)
+          #pywikibot.output(text.encode('utf-8', 'replace'))
 
     def load(self, page):
         """
@@ -184,7 +184,7 @@ class BasicBot:
                 if choice == 'y':
                     try:
                         # Save the page
-                        page.put(text, comment=comment,
+                        page.put(text.encode('utf-8', 'replace'), comment=comment,
                                  minorEdit=minorEdit, botflag=botflag)
                     except pywikibot.LockedPage:
                         pywikibot.output(u"Page %s is locked; skipping."
@@ -195,7 +195,7 @@ class BasicBot:
                             % (page.title()))
                     except pywikibot.SpamfilterError, error:
                         pywikibot.output(
-u'Cannot change %s because of spam blacklist entry %s'
+                            u'Cannot change %s because of spam blacklist entry %s'
                             % (page.title(), error.url))
                     else:
                         return True
@@ -332,10 +332,40 @@ u'Cannot change %s because of spam blacklist entry %s'
                 for name in movie.get('director'):
                   data += name['name'] + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+            elif(field.split("=")[0].strip() == "producer"):
+              if movie.get('producer'):
+                for name in movie.get('producer')[0:2]:
+                  data += name['name'] + "+"
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+            elif(field.split("=")[0].strip() == "starring"):
+              if movie.get('cast'):
+                for name in movie.get('cast')[0:4]:
+                  data += name['name'] + "+"
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+            elif(field.split("=")[0].strip() == "music"):
+              if movie.get('original music'):
+                for name in movie.get('original music')[0:2]:
+                  data += name['name'] + "+"
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+            elif(field.split("=")[0].strip() == "cinematography"):
+              if movie.get('cinematographer'):
+                for name in movie.get('cinematographer')[0:2]:
+                  data += name['name'] + "+"
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+            elif(field.split("=")[0].strip() == "editing"):
+              if movie.get('editor'):
+                for name in movie.get('editor')[0:2]:
+                  data += name['name'] + "+"
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+            elif(field.split("=")[0].strip() == "studio"):
+              if movie.get('studio'):
+                for name in movie.get('studio')[0:2]:
+                  data += name['name'] + "+"
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "released"):
               if movie.get('release date'):
                 for date in movie.get('release date'):
-                  data += self.formatDate(date) + "+"
+                  data += elf.formatDate(date) + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             #elif(field.split("=")[0].strip() == "writer"):
             #  if movie.get('writer'):
