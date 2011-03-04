@@ -278,6 +278,8 @@ class BasicBot:
               if self.commentRegex.search(data) :
                 refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
                 data = re.sub(self.commentRegex, "", data)
+                
+              data = re.sub(",<br />", "<br />", data) #if there are commas and line breaks, oh my
               
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
