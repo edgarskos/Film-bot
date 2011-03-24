@@ -395,8 +395,14 @@ class BasicBot:
               
 
       return infobox
-      
+
     def formatDate(self, data):
+      month = "" #initialize so if they are not used prints empty in template
+      day = "" 
+      origData = data #save so if we find out it's not really a date
+      usDateRegex = re.compile("(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{2}.[0-9]{4}", re.I)
+      euDateRegex = re.compile("[0-9]{2}.(january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}", re.I)
+      shortDateRegex = re.compile("(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{4}", re.I)
       #If the date is 3 different items without a place in parens.  I use the re.sub to replace the place with nothing, removing it from the date. I find the
       #  format by replacing the different items with their format name from datetime. Then compile it all into a film date template.
       data = re.sub("{{flag.?icon.*?}}", "", data, 0, re.I).strip() #remove any flagicons
@@ -405,36 +411,33 @@ class BasicBot:
       else:
         data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
-      if(len(re.sub("\([A-Za-z ]+\)", "", data).split()) == 3):
-        format = re.sub("[0-9]{1,2}", "%d", re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", re.sub("\([A-Za-z ]+\)", "", data)))) #convert what is in the data field to what format it is in datetime.
-        date = datetime.strptime(re.sub("\([A-Za-z ]+\)", "", data), format) #convert to date
-        try: re.search("\([A-Za-z ]+\)", data).group()
-        except AttributeError:
-          place = ""
-        else:
-          place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
-        data = "{{film date|"+str(date.year)+"|"+str(date.month)+"|"+str(date.day)+"|"+place+"}}"
+      justDate = re.sub("\([A-Za-z ]+\)", "", data)
+      #If after the wikilink removal it isn't a proper date just skip it.
+      if(not (usDateRegex.search(justDate) or euDateRegex.search(justDate) or shortDateRegex.search(justDate) or justDate.isdigit())):
+        return origData
+      if(len(justDate.split()) == 3):
+        format = re.sub("[0-9]{1,2}", "%d", re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", justDate))) #convert what is in the data field to what format it is in datetime.
+        date = datetime.strptime(justDate, format) #convert to date
+        month = str(date.month)
+        day = str(date.day)
       #if it's only 2 it's usually a year and a month
-      elif(len(re.sub("\([A-Za-z ]+\)", "", data).split()) == 2):
-        format = re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", re.sub("\([A-Za-z ]+\)", "", data))) #convert what is in the data field to what format it is in datetime.
-        date = datetime.strptime(re.sub("\([A-Za-z ]+\)", "", data), format) #convert to date
-        try: re.search("\([A-Za-z ]+\)", data).group()
-        except AttributeError:
-          place = ""
-        else:
-          place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
-        data = "{{film date|"+str(date.year)+"|"+str(date.month)+"| |"+place+"}}"
+      elif(len(justDate.split()) == 2):
+        format = re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", justDate)) #convert what is in the data field to what format it is in datetime.
+        date = datetime.strptime(justDate, format) #convert to date
+        month = str(date.month)
       #only 1 item is usually just the year
-      elif(len(re.sub("\([A-Za-z ]+\)", "", data).split()) == 1):
-        format = re.sub("[0-9]{4}", "%Y", re.sub("\([A-Za-z ]+\)", "", data)) #convert what is in the data field to what format it is in datetime.
+      elif(len(justDate.split()) == 1 and justDate.isdigit()):
+        format = re.sub("[0-9]{4}", "%Y", justDate) #convert what is in the data field to what format it is in datetime.
         date = datetime.strptime(re.sub("\([A-Za-z ]+\)", "", data), format) #convert to date
-        try: re.search("\([A-Za-z ]+\)", data).group()
-        except AttributeError:
-          place = ""
-        else:
-          place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
-        data = "{{film date|"+str(date.year)+"| | |"+place+"}}"
-      return data      
+      #see if there is a place to add  
+      try: re.search("\([A-Za-z ]+\)", data).group()
+      except AttributeError:
+        place = ""
+      else:
+        place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
+      data = "{{film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+"}}"
+      return data   
+      
 def main():
     # This factory is responsible for processing command line arguments
     # that are also used by other scripts and that determine on which pages
