@@ -217,6 +217,7 @@ class BasicBot:
     def infoboxCleanup(self, infobox):
       infobox = infobox.replace("<br>", "<br />") #convert old style breaks to new style
       infobox = infobox.replace("<br/>", "<br />") #convert old style breaks to new style
+      infobox = infobox.replace("<BR>", "<br />") #convert old style breaks to new style
       newBox = self.infoboxTemplate
       infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|")
       for field in infoSplit:
@@ -412,6 +413,7 @@ class BasicBot:
         data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       justDate = re.sub("\([A-Za-z ]+\)", "", data)
+      pywikibot.output(data)
       #If after the wikilink removal it isn't a proper date just skip it.
       if(not (usDateRegex.search(justDate) or euDateRegex.search(justDate) or shortDateRegex.search(justDate) or justDate.isdigit())):
         return origData
