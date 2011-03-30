@@ -32,6 +32,7 @@ import sys
 from datetime import datetime
 import imdb
 import filmfunctions
+import difflib
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -138,7 +139,7 @@ class BasicBot:
             elif text[infoboxEnd:infoboxEnd+1] == "}":
               bracketCount -= 1
           infobox = text[infoboxStart:infoboxEnd-1]
-          text = text[:infoboxStart-2] + self.infoboxCleanup(infobox) + text[infoboxEnd+2:] #replace old infobox with new one and put it where the old one was.
+          text = text[:infoboxStart-2] + self.infoboxCleanup(infobox) + text[infoboxEnd+1:] #replace old infobox with new one and put it where the old one was.
         elif(text.find(r"(i|I)nfobox") != -1): #infox doesn't exists
           text = text #self.infoboxTemplate + text
           
@@ -146,6 +147,58 @@ class BasicBot:
           pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
           
           #pywikibot.output(text.encode('utf-8', 'replace'))
+          
+    def logDiff(self, oldtext, newtext):
+      # This is probably not portable to non-terminal interfaces....
+      # For information on difflib, see http://pydoc.org/2.3/difflib.html
+      color = {
+          '+': '',
+          '-': '',
+      }
+      diff = u''
+      colors = []
+      # This will store the last line beginning with + or -.
+      lastline = None
+      # For testing purposes only: show original, uncolored diff
+      #     for line in difflib.ndiff(oldtext.splitlines(), newtext.splitlines()):
+      #         print line
+      for line in difflib.ndiff(oldtext.splitlines(), newtext.splitlines()):
+          if line.startswith('?'):
+              # initialize color vector with None, which means default color
+              lastcolors = [None for c in lastline]
+              # colorize the + or - sign
+              lastcolors[0] = color[lastline[0]]
+              # colorize changed parts in red or green
+              for i in range(min(len(line), len(lastline))):
+                  if line[i] != ' ':
+                      lastcolors[i] = color[lastline[0]]
+              diff += lastline + '\n'
+              # append one None (default color) for the newline character
+              colors += lastcolors + [None]
+          elif lastline:
+              diff += lastline + '\n'
+              # colorize the + or - sign only
+              lastcolors = [None for c in lastline]
+              lastcolors[0] = color[lastline[0]]
+              colors += lastcolors + [None]
+          lastline = None
+          if line[0] in ('+', '-'):
+              lastline = line
+      # there might be one + or - line left that wasn't followed by a ? line.
+      if lastline:
+          diff += lastline + '\n'
+          # colorize the + or - sign only
+          lastcolors = [None for c in lastline]
+          lastcolors[0] = color[lastline[0]]
+          colors += lastcolors + [None]
+
+      result = u''
+      lastcolor = None
+      for i in range(len(diff)):
+
+          lastcolor = colors[i]
+          result += diff[i]
+      return result
 
     def load(self, page):
         """
@@ -173,8 +226,13 @@ class BasicBot:
                              % page.title())
             # show what was changed
             pywikibot.showDiff(page.get(), text)
+            f = open('log.txt', 'w')
+            f.write(page.title() + "\n")
+            f.write(self.logDiff(page.get(), text))
+            f.write("\n\n")
+            #f.write(difflib.HtmlDiff(8, 50).make_file(page.get().splitlines(), text.splitlines()))
             
-            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
@@ -373,7 +431,7 @@ class BasicBot:
             elif(field.split("=")[0].strip() == "released"):
               if movie.get('release date'):
                 for date in movie.get('release date'):
-                  data += elf.formatDate(date) + "+"
+                  data += self.formatDate(date) + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             #elif(field.split("=")[0].strip() == "writer"):
             #  if movie.get('writer'):
@@ -413,7 +471,6 @@ class BasicBot:
         data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       justDate = re.sub("\([A-Za-z ]+\)", "", data)
-      pywikibot.output(data)
       #If after the wikilink removal it isn't a proper date just skip it.
       if(not (usDateRegex.search(justDate) or euDateRegex.search(justDate) or shortDateRegex.search(justDate) or justDate.isdigit())):
         return origData
