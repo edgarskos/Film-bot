@@ -33,6 +33,7 @@ from datetime import datetime
 import imdb
 import filmfunctions
 import difflib
+import codecs
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -75,6 +76,7 @@ class BasicBot:
         self.referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
         self.commentRegex = re.compile("<!--.*?-->")
         self.wikilinkRegex = re.compile("\[\[.*\|.*\]\]")
+        self.log = codecs.open('log.txt', 'w', 'utf-8')
         # Set the edit summary message
         self.summary = pywikibot.translate(pywikibot.getSite(), self.msg)
         linktrail = pywikibot.getSite().linktrail()
@@ -226,11 +228,10 @@ class BasicBot:
                              % page.title())
             # show what was changed
             pywikibot.showDiff(page.get(), text)
-            f = open('log.txt', 'w')
-            f.write(page.title() + "\n")
-            f.write(self.logDiff(page.get(), text))
-            f.write("\n\n")
-            #f.write(difflib.HtmlDiff(8, 50).make_file(page.get().splitlines(), text.splitlines()))
+            
+            self.log.write("======" + page.title() + "======\n")
+            self.log.write(self.logDiff(page.get(), text))
+            self.log.write("\n\n")
             
             #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
