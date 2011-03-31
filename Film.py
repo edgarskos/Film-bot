@@ -470,15 +470,16 @@ class BasicBot:
       origData = data #save so if we find out it's not really a date
       usDateRegex = re.compile("(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{2}.[0-9]{4}", re.I)
       euDateRegex = re.compile("[0-9]{2}.(january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}", re.I)
-      shortDateRegex = re.compile("(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{4}", re.I)
+      shortDateRegex = re.compile("^(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{4}$", re.I)
       #If the date is 3 different items without a place in parens.  I use the re.sub to replace the place with nothing, removing it from the date. I find the
       #  format by replacing the different items with their format name from datetime. Then compile it all into a film date template.
       data = re.sub("{{flag.?icon.*?}}", "", data, 0, re.I).strip() #remove any flagicons
-
+      #remove the wikilinks if they exist
       if(data.find("[[") != -1):
         data = self.removeWikilink(data)
-
-      pywikibot.output(data)
+      #remove the "th" from any number in the date that might have it.
+      if(re.search("[0-9]{2}th", data)):
+        data = re.sub("[0-9]{2}th", data[data.find(re.search("[0-9]{2}th", data).group(0)):data.find(re.search("[0-9]{2}th", data).group(0))+2], data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       justDate = re.sub("\([A-Za-z ]+\)", "", data)
       #If after the wikilink removal it isn't a proper date just skip it.
