@@ -260,17 +260,25 @@ class BasicBot:
                         return True
         return False
         
-    #remove any possible wikilinks
+    #remove any possible wikilinks by searching through them one at a time
     def removeWikilink(self, data):
-      returned = ""
-      dataSplit = re.sub(", ", "<br />", data).split("<br />")
-      for field in dataSplit:
-        if(re.search("\|.*?\]\]", field)) : 
-          field = re.search("\|.*?\]\]", field).group().replace("|", "").replace("]]", "")
-        elif(re.search("\[\[.*?\]\]", field)):
-          field = re.search("\[\[.*?\]\]", field).group().replace("[[", "").replace("]]", "")
-        returned += field + "+"
-      return re.sub("\+", "<br />", returned.rstrip("+"))
+      while(data.find("[[") != -1):
+        bracketCount = 1
+        wLinkStart = data.find("[[")
+        wLinkEnd = wLinkStart
+        while bracketCount != 0 :
+          wLinkEnd += 1
+          if data[wLinkEnd:wLinkEnd+1] == "[":
+            bracketCount += 1
+          elif data[wLinkEnd:wLinkEnd+1] == "]":
+            bracketCount -= 1
+        wLink = data[wLinkStart:wLinkEnd+1]
+        if(re.search("\|.*?\]\]", wLink)) : 
+          wLink = re.search("\|.*?\]\]", wLink).group().replace("|", "").replace("]]", "")
+        elif(re.search("\[\[.*?\]\]", wLink)):
+          wLink = re.search("\[\[.*?\]\]", wLink).group().replace("[[", "").replace("]]", "")
+        data = data[:wLinkStart] + wLink + data[wLinkEnd+1:]
+      return data
     
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
@@ -466,10 +474,11 @@ class BasicBot:
       #If the date is 3 different items without a place in parens.  I use the re.sub to replace the place with nothing, removing it from the date. I find the
       #  format by replacing the different items with their format name from datetime. Then compile it all into a film date template.
       data = re.sub("{{flag.?icon.*?}}", "", data, 0, re.I).strip() #remove any flagicons
-      if(data[:2] == "[["):
+
+      if(data.find("[[") != -1):
         data = self.removeWikilink(data)
-      else:
-        data = re.sub(",", "", re.sub("\]\]", "", re.sub("\[\[", "", data)))
+
+      pywikibot.output(data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       justDate = re.sub("\([A-Za-z ]+\)", "", data)
       #If after the wikilink removal it isn't a proper date just skip it.
