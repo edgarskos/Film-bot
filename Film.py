@@ -482,7 +482,7 @@ class BasicBot:
       if(re.search("[0-9]{2}th", data)):
         data = re.sub("[0-9]{2}th", data[data.find(re.search("[0-9]{2}th", data).group(0)):data.find(re.search("[0-9]{2}th", data).group(0))+2], data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
-      justDate = re.sub("\([A-Za-z ]+\)", "", data)
+      justDate = re.sub("\([.A-Za-z ]+\)", "", data)
       #If after the wikilink removal it isn't a proper date just skip it.
       if(not (usDateRegex.search(justDate) or euDateRegex.search(justDate) or shortDateRegex.search(justDate) or justDate.isdigit())):
         return origData
@@ -501,11 +501,11 @@ class BasicBot:
         format = re.sub("[0-9]{4}", "%Y", justDate) #convert what is in the data field to what format it is in datetime.
         date = datetime.strptime(re.sub("\([A-Za-z ]+\)", "", data), format) #convert to date
       #see if there is a place to add  
-      try: re.search("\([A-Za-z ]+\)", data).group()
+      try: re.search("\([.A-Za-z ]+\)", data).group()
       except AttributeError:
         place = ""
       else:
-        place = re.search("\([A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
+        place = re.search("\([.A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
       data = "{{film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+"}}"
       return data   
       
