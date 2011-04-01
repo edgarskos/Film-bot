@@ -469,8 +469,8 @@ class BasicBot:
       month = "" #initialize so if they are not used prints empty in template
       day = "" 
       origData = data #save so if we find out it's not really a date
-      usDateRegex = re.compile("(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{2}.[0-9]{4}", re.I)
-      euDateRegex = re.compile("[0-9]{2}.(january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}", re.I)
+      usDateRegex = re.compile("^(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{2}.[0-9]{4}$", re.I)
+      euDateRegex = re.compile("^[0-9]{2}.(january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}$", re.I)
       shortDateRegex = re.compile("^(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{4}$", re.I)
       #If the date is 3 different items without a place in parens.  I use the re.sub to replace the place with nothing, removing it from the date. I find the
       #  format by replacing the different items with their format name from datetime. Then compile it all into a film date template.
