@@ -482,6 +482,7 @@ class BasicBot:
       if(re.search("[0-9]{2}th", data)):
         data = re.sub("[0-9]{2}th", data[data.find(re.search("[0-9]{2}th", data).group(0)):data.find(re.search("[0-9]{2}th", data).group(0))+2], data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
+      data = re.sub(",", "", data) # remove any commas in the date format
       justDate = re.sub("\([.A-Za-z ]+\)", "", data)
       #If after the wikilink removal it isn't a proper date just skip it.
       if(not (usDateRegex.search(justDate) or euDateRegex.search(justDate) or shortDateRegex.search(justDate) or justDate.isdigit())):
