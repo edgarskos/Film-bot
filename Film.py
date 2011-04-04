@@ -353,6 +353,7 @@ class BasicBot:
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
               elif(field.split("=")[0].strip().lower() == "country"):
+                data = re.sub("<br />", ", ", data)
                 data = self.removeWikilink(data)
                 data = filmfunctions.countryToTemplate(data)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower())):
@@ -483,7 +484,7 @@ class BasicBot:
         data = re.sub("[0-9]{2}th", data[data.find(re.search("[0-9]{2}th", data).group(0)):data.find(re.search("[0-9]{2}th", data).group(0))+2], data)
       data = re.sub("<small>", "", re.sub("</small>", "", data)) #remove any small tags
       data = re.sub(",", "", data) # remove any commas in the date format
-      justDate = re.sub("\([.A-Za-z ]+\)", "", data)
+      justDate = re.sub("\([.A-Za-z ]+\)", "", data).strip()
       #If after the wikilink removal it isn't a proper date just skip it.
       if(not (usDateRegex.search(justDate) or euDateRegex.search(justDate) or shortDateRegex.search(justDate) or justDate.isdigit())):
         return origData

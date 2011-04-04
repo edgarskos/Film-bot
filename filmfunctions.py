@@ -3,7 +3,7 @@ import re
 def countryToTemplate(countries):
   returned = ""
 
-  for data in countries.split("<br />"):
+  for data in countries.split(","):
   
     if(data.strip().lower() == "united states" or data.strip().lower() == "us" or data.strip().lower() == "usa" or data.strip().lower() == "{{usa}}" or data.strip().lower() == "{{us}}" or data.strip().lower() == "{{flag|usa}}"): #if country is us change to {{filmUS}}
       data = "{{Film US}}"
@@ -184,4 +184,4 @@ def countryToTemplate(countries):
       
     returned += data + "+"
 
-  return re.sub("\+", "<br />", returned.rstrip("+"))
+  return re.sub("\+", ", ", returned.rstrip("+"))
