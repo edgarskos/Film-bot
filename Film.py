@@ -295,12 +295,12 @@ class BasicBot:
         else:
           if(field.split("=")[1].strip() != ""): #only extract fields with info
             #The info is going to be inserted into the new infobox, I find where the equals sign exists for the field where I'm inserting the info
-            fieldRegex = re.compile(field.split("=")[0].lower().strip()+"[^\|]") #find the field but it can't have a | after. This will ensure I get a field and not the data
+            fieldRegex = re.compile(field.split("=")[0].lower().strip()+"[^\|].*=") #find the field but it can't have a | after. This will ensure I get a field and not the data
             temp = fieldRegex.search(newBox)
             try: equals = newBox.find("=", temp.start()) #I need where we're place in the information in the new infobox
             except:
               equals = -1
-            oldEquals = infobox.find("=", infobox.find(field.split("=")[0])) #I need where the information starts in the old infobox
+            oldEquals = infobox.find("=", fieldRegex.search(infobox).start()) #I need where the information starts in the old infobox
             if(equals != -1): #if an old field is not used, do not copy it over
               #This is silly.  I find where the next equals sign is in the old infobox starting from the equals sign is in the field we're replacing.
               #  I can now find (using rfind) where the last "|" inbetween those equals signs. This allows me to take all the information instead of when
@@ -349,7 +349,6 @@ class BasicBot:
                 data = re.sub(self.commentRegex, "", data)
                 
               data = re.sub(",<br />", "<br />", data) #if there are commas and line breaks, oh my
-              
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
               elif(field.split("=")[0].strip().lower() == "country"):
