@@ -365,6 +365,8 @@ class BasicBot:
               elif(field.split("=")[0].strip().lower() == "runtime") :
                 data = self.removeWikilink(data)
                 data = re.sub("(min(\.)|mins|min|mins\.)(?!utes)", "minutes", data)
+              elif(field.split("=")[0].strip().lower() == "distributor"):
+                data = re.sub("{{flag.?icon.*?}}", "", data, 0, re.I).strip()
                 
               data += refs #attach the references and comments again
                 
