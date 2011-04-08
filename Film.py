@@ -316,8 +316,8 @@ class BasicBot:
                     insideWiki = True
                 except:
                   sys.exc_clear()
-            oldEquals = infobox.find("=", fieldRegex.search(infobox).start()) #I need where the information starts in the old infobox
             if(equals != -1): #if an old field is not used, do not copy it over
+              oldEquals = infobox.find("=", fieldRegex.search(infobox).start()) #I need where the information starts in the old infobox
               #This is silly.  I find where the next equals sign is in the old infobox starting from the equals sign is in the field we're replacing.
               #  I can now find (using rfind) where the last "|" inbetween those equals signs. This allows me to take all the information instead of when
               #  something is wikilinked inside the data. I strip the old data to remove any access whitespace.
