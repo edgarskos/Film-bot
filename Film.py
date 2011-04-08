@@ -235,7 +235,7 @@ class BasicBot:
             self.log.write(self.logDiff(page.get(), text))
             self.log.write("\n\n")
             
-            #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
@@ -296,7 +296,7 @@ class BasicBot:
         else:
           if(field.split("=")[1].strip() != ""): #only extract fields with info
             #The info is going to be inserted into the new infobox, I find where the equals sign exists for the field where I'm inserting the info
-            fieldRegex = re.compile(field.split("=")[0].lower().strip()+"[^\|].*=") #find the field but it can't have a | after. This will ensure I get a field and not the data
+            fieldRegex = re.compile(field.split("=")[0].lower().strip()+"[^\|]*?=") #find the field but it can't have a | after. This will ensure I get a field and not the data
             temp = fieldRegex.search(newBox)
             #first try and find where it should go in the new infobox
             try: equals = newBox.find("=", temp.start())
