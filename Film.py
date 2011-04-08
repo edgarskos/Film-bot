@@ -34,6 +34,7 @@ import imdb
 import filmfunctions
 import difflib
 import codecs
+import itertools
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -297,9 +298,24 @@ class BasicBot:
             #The info is going to be inserted into the new infobox, I find where the equals sign exists for the field where I'm inserting the info
             fieldRegex = re.compile(field.split("=")[0].lower().strip()+"[^\|].*=") #find the field but it can't have a | after. This will ensure I get a field and not the data
             temp = fieldRegex.search(newBox)
-            try: equals = newBox.find("=", temp.start()) #I need where we're place in the information in the new infobox
+            #first try and find where it should go in the new infobox
+            try: equals = newBox.find("=", temp.start())
             except:
               equals = -1
+            #but then make sure to check that it is not inside any wiki templates/refs that have been placed inside the new infobox.
+            insideWiki = True
+            searches = itertools.chain(self.commentRegex.finditer(newBox), self.referenceRegex.finditer(newBox), self.templateRegex.finditer(newBox), self.wikilinkRegex.finditer(newBox)) #create a combine iterator
+            while(insideWiki):
+              insideWiki = False
+              for search in searches: 
+                try: 
+                  if(equals > search.start() and equals < search.end()):
+                    try: equals = newBox.find("=", fieldRegex.search(newBox, search.end()).start()) #I need where we're place in the information in the new infobox
+                    except:
+                      equals = -1
+                    insideWiki = True
+                except:
+                  sys.exc_clear()
             oldEquals = infobox.find("=", fieldRegex.search(infobox).start()) #I need where the information starts in the old infobox
             if(equals != -1): #if an old field is not used, do not copy it over
               #This is silly.  I find where the next equals sign is in the old infobox starting from the equals sign is in the field we're replacing.
@@ -308,7 +324,7 @@ class BasicBot:
               searches = [self.commentRegex.search(infobox, oldEquals), self.referenceRegex.search(infobox, oldEquals), self.templateRegex.search(infobox, oldEquals), self.wikilinkRegex.search(infobox, oldEquals)] #create an array
               first = len(infobox)
               tmp = None #default just in case it isn't set inside the next for loop
-              #go through all of the possible searches and pick the one that is closes to where I'm actually trying to get data from.  This way I don't have
+              #go through all of the possible wiki refences/templates and pick the one that is closest to where I'm actually trying to get data from.  This way I don't have
               #  to try and guess an order for them I just get the one that is the most relevant.
               for search in searches: 
                 try: 
@@ -347,7 +363,7 @@ class BasicBot:
               if self.commentRegex.search(data) :
                 refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
                 data = re.sub(self.commentRegex, "", data)
-                
+
               data = re.sub(",<br />", "<br />", data) #if there are commas and line breaks, oh my
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
