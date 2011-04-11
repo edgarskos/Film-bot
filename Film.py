@@ -235,7 +235,7 @@ class BasicBot:
             self.log.write(self.logDiff(page.get(), text))
             self.log.write("\n\n")
             
-            #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
@@ -352,7 +352,7 @@ class BasicBot:
                   y = x + 1
                   x = infobox.find("=", y)
                 if(x == -1):
-                  data = infobox[oldEquals+1:].strip()
+                  data = re.sub("\|", "", infobox[oldEquals+1:]).strip()
                 else:
                   data = infobox[oldEquals+1:infobox.rfind("|", oldEquals, infobox.find("=", x))].strip()
               #pywikibot.output(field.split("=")[0].strip().lower() + ": " + data)
