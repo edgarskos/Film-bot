@@ -342,7 +342,7 @@ class BasicBot:
               try: tmp.end() #if there is no end and the template doesn't exist
               except AttributeError: #just do it like usual, no template found
                 if infobox.find("=", oldEquals+1) == -1: #if the field is at the end of the infobox just take the rest
-                  data = infobox[oldEquals+1:].strip()
+                  data = re.sub("\|", "", infobox[oldEquals+1:]).strip()
                 else:
                   data = infobox[oldEquals+1:infobox.rfind("|", oldEquals, infobox.find("=", oldEquals+1))].strip()
               else: #there is a wikipedia special section found
