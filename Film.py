@@ -421,8 +421,6 @@ class BasicBot:
           sys.exc_clear() #skip it if there is an index error, means it has no "=", invalid field
         else:
           if(field.split("=")[1].strip() == ""): #fill in fields without data
-            #if(field.split("=")[0].strip() == "runtime"):
-            #  pywikibot.output(field.split("=")[0].strip() + ": " + movie.get('runtime'))
             if(field.split("=")[0].strip() == "director"):
               if movie.get('director'):
                 for name in movie.get('director'):
@@ -470,7 +468,9 @@ class BasicBot:
             #    infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "runtime"):
               if movie.get('runtime'):
-                try: infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + movie.get('runtime')[0].split(":")[1] + " minutes" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                try: 
+                  if(movie.get('runtime')[0].split(":")[0].isdigit()):
+                    infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + movie.get('runtime')[0].split(":")[0] + " minutes" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
                 except IndexError:
                   infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + movie.get('runtime')[0] + " minutes" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "country"):
