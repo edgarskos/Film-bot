@@ -304,9 +304,9 @@ class BasicBot:
               equals = -1
             #but then make sure to check that it is not inside any wiki templates/refs that have been placed inside the new infobox.
             insideWiki = True
-            searches = itertools.chain(self.commentRegex.finditer(newBox), self.referenceRegex.finditer(newBox), self.templateRegex.finditer(newBox), self.wikilinkRegex.finditer(newBox)) #create a combine iterator
             while(insideWiki):
               insideWiki = False
+              searches = itertools.chain(self.commentRegex.finditer(newBox), self.referenceRegex.finditer(newBox), self.templateRegex.finditer(newBox), self.wikilinkRegex.finditer(newBox)) #create a combine iterator
               for search in searches: 
                 try: 
                   if(equals > search.start() and equals < search.end()):
@@ -320,43 +320,30 @@ class BasicBot:
             except:
               oldEquals = -1
             if(equals != -1 and oldEquals != -1): #if an old field is not used, do not copy it over
-              #This is silly.  I find where the next equals sign is in the old infobox starting from the equals sign is in the field we're replacing.
-              #  I can now find (using rfind) where the last "|" inbetween those equals signs. This allows me to take all the information instead of when
-              #  something is wikilinked inside the data. I strip the old data to remove any access whitespace.
-              searches = [self.commentRegex.search(infobox, oldEquals), self.referenceRegex.search(infobox, oldEquals), self.templateRegex.search(infobox, oldEquals), self.wikilinkRegex.search(infobox, oldEquals)] #create an array
-              first = len(infobox)
-              tmp = None #default just in case it isn't set inside the next for loop
-              #go through all of the possible wiki refences/templates and pick the one that is closest to where I'm actually trying to get data from.  This way I don't have
-              #  to try and guess an order for them I just get the one that is the most relevant.
-              for search in searches: 
-                try: 
-                  #pywikibot.output(infobox[search.start():search.end()] + " " + str(search.start()) + " " + str(search.end()))
-                  if search.start() < first:
-                    first = search.start()
-                    tmp = search
-                except:
-                  sys.exc_clear() #do nothing on error
-              #Ok ok, this is great. Since equals signs can be inside templates and there are templates inside the infobox I have to find a way to
-              #  not get any equals signs inside the template.  So of course I have to search for an equals and if I find one inside a template I have to
-              #  go to the next equals sign until I find one that isn't in a template.
-              try: tmp.end() #if there is no end and the template doesn't exist
-              except AttributeError: #just do it like usual, no template found
-                if infobox.find("=", oldEquals+1) == -1: #if the field is at the end of the infobox just take the rest
+              #This used to be silly but now it's quite reasonable. Loop through and check against every search to make sure
+              # that the equals sign is not inside any wiki-stuff.
+              insideWiki = True
+              y = oldEquals + 1
+              x = infobox.find("=", y) #find the next equals
+              while(insideWiki):
+                insideWiki = False
+                searches = itertools.chain(self.commentRegex.finditer(infobox), self.referenceRegex.finditer(infobox), self.templateRegex.finditer(infobox), self.wikilinkRegex.finditer(infobox))
+                for search in searches: 
+                  #pywikibot.output(str(x) + " " + str(search.start()) + " " + str(search.end()))
+                  try: 
+                    if(x > search.start() and x < search.end()):
+                      insideWiki = True
+                      y = x + 1
+                      x = infobox.find("=", y)
+                  except:
+                    sys.exc_clear()
+                #if it wasn't inside any of the wiki-stuff then it's ok to grab it
+                if(y > len(infobox) and not insideWiki):
                   data = re.sub("\|", "", infobox[oldEquals+1:]).strip()
-                else:
-                  data = infobox[oldEquals+1:infobox.rfind("|", oldEquals, infobox.find("=", oldEquals+1))].strip()
-              else: #there is a wikipedia special section found
-                y = oldEquals + 1
-                x = infobox.find("=", y) #find the next equals
-                while (x > tmp.start() and x < tmp.end()) or (infobox.rfind("|", oldEquals, infobox.find("=", x)) > tmp.start() and infobox.rfind("|", oldEquals, infobox.find("=", x)) < tmp.end()) : #if the equals sign is inside the found template, find the next one that isn't inside the template
-                  y = x + 1
-                  x = infobox.find("=", y)
-                if(x == -1):
-                  data = re.sub("\|", "", infobox[oldEquals+1:]).strip()
-                else:
+                elif(not insideWiki):
                   data = infobox[oldEquals+1:infobox.rfind("|", oldEquals, infobox.find("=", x))].strip()
               #pywikibot.output(field.split("=")[0].strip().lower() + ": " + data)
-              
+
               #This will take care of any references and comments on the data
               refs = "" #initialize
               if self.referenceRegex.search(data) : #remove the ref and save it for later so I can format the date
