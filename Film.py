@@ -356,7 +356,7 @@ class BasicBot:
               data = re.sub(",<br />", "<br />", data) #if there are commas and line breaks, oh my
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
-              elif(field.split("=")[0].strip().lower() == "country"):
+              elif(field.split("=")[0].strip().lower() == "country" and not re.search("image:flag", data.lower())):
                 data = re.sub("<br />", ", ", data)
                 data = self.removeWikilink(data)
                 data = filmfunctions.countryToTemplate(data)
