@@ -117,6 +117,8 @@ class BasicBot:
         text = pywikibot.replaceExcept(text, r"{{(Rottentomatoes|Rotten Tomatoes|Rotten tomatoes)", "{{Rotten-tomatoes", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         text = pywikibot.replaceExcept(text, r"{{(IMDB title|IMDBtitle|IMDb Title|Imdb movie|Imdb title|Imdb-title|Imdbtitle|imdb title)", "{{IMDb title", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         text = pywikibot.replaceExcept(text, r"{{(Amg title|Amg movie|Allmovie)\|", "{{Allmovie title|", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+        if(re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text)):
+          text = text[:re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start()]+self.removeWikilink(text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start():re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end()]) + text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end():]
         
         ####self.imdbNum = 
         if re.subn("{{IMDb title.*?}}", "", text)[1] == 1: #If there is only 1 imdb link on the page search for the info
