@@ -340,8 +340,8 @@ class BasicBot:
                   except:
                     sys.exc_clear()
                 #if it wasn't inside any of the wiki-stuff then it's ok to grab it
-                if(y > len(infobox) and not insideWiki):
-                  data = re.sub("\|", "", infobox[oldEquals+1:]).strip()
+                if(x == -1 and not insideWiki):
+                  data = infobox[oldEquals+1:].strip()
                 elif(not insideWiki):
                   data = infobox[oldEquals+1:infobox.rfind("|", oldEquals, infobox.find("=", x))].strip()
               #pywikibot.output(field.split("=")[0].strip().lower() + ": " + data)
