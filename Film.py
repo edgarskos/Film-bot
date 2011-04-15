@@ -477,6 +477,7 @@ class BasicBot:
     def formatDate(self, data):
       month = "" #initialize so if they are not used prints empty in template
       day = "" 
+      options = ""
       origData = data #save so if we find out it's not really a date
       usDateRegex = re.compile("^(january|february|march|april|may|june|july|august|september|october|november|december).[0-9]{1,2}.[0-9]{4}$", re.I)
       euDateRegex = re.compile("^[0-9]{1,2}.(january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}$", re.I)
@@ -516,7 +517,9 @@ class BasicBot:
         place = ""
       else:
         place = re.search("\([.A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
-      data = "{{film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+"}}"
+      if(euDateRegex.search(justDate)): #if a EU date make the day appear first.
+        options = "|df=y"
+      data = "{{film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+options+"}}"
       return data   
       
 def main():
