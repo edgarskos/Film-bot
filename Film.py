@@ -237,7 +237,7 @@ class BasicBot:
             self.log.write(self.logDiff(page.get(), text))
             self.log.write("\n\n")
             
-            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
@@ -360,7 +360,7 @@ class BasicBot:
               data = re.sub(",<br />", "<br />", data) #if there are commas and line breaks, oh my
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
-              elif(field.split("=")[0].strip().lower() == "country" and not re.search("image:flag", data.lower())):
+              elif(field.split("=")[0].strip().lower() == "country" and not re.search("image:flag", data.lower()) and not re.search("file:flag", data.lower())):
                 data = re.sub("<br />", ", ", data)
                 data = self.removeWikilink(data)
                 data = filmfunctions.countryToTemplate(data)
