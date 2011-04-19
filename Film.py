@@ -522,7 +522,7 @@ class BasicBot:
       if(euDateRegex.search(justDate)): #if a EU date make the day appear first.
         options = "|df=y"
       data = "{{film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+options+"}}"
-      return data   
+      return data + " <!--{{Film date|year|month|day|location}}-->"
       
 def main():
     # This factory is responsible for processing command line arguments
