@@ -83,7 +83,21 @@ class BasicBot:
         linktrail = pywikibot.getSite().linktrail()
         self.linkR = re.compile(r'\[\[(?P<title>[^\]\|#]*)(?P<section>#[^\]\|]*)?(\|(?P<label>[^\]]*))?\]\](?P<linktrail>' + linktrail + ')')
         #Gets the infobox template from the documentation page.
-        self.infoboxTemplate = pywikibot.replaceExcept(re.search("{{Infobox film.*?[^}]}}[^}]", pywikibot.Page(pywikibot.getSite(), "Template:Infobox_film/doc").get(), re.S).group(), r"{{{.*?}}}", "", "")
+        infoTemp = pywikibot.Page(pywikibot.getSite(), "Template:Infobox_film/doc").get()
+        infoTempStart = infoTemp.find("{{Infobox film") + 2
+        bracketCount = 2
+        infoTempEnd = infoTempStart
+        while bracketCount != 0 :
+          infoTempEnd += 1
+          if infoTemp[infoTempEnd:infoTempEnd+1] == "{":
+            bracketCount += 1
+          elif infoTemp[infoTempEnd:infoTempEnd+1] == "}":
+            bracketCount -= 1
+        self.infoboxTemplate = infoTemp[infoTempStart - 2:infoTempEnd+1]
+        pywikibot.output(self.infoboxTemplate)
+        
+        #Old way to do it with the template written out on the page with triple "{" in the infos
+        #pywikibot.replaceExcept(re.search("{{Infobox film.*?[^}]}}[^}]", pywikibot.Page(pywikibot.getSite(), "Template:Infobox_film/doc").get(), re.S).group(), r"{{{.*?}}}", "", "")
         
     def run(self):
         for page in self.generator:
@@ -128,7 +142,7 @@ class BasicBot:
           self.imdbNum = 0
           
         #fix bad template names for infobox film
-        text = pywikibot.replaceExcept(text, r"((I|i)nfobox Film|(I|i)nfobox (M|m)ovie)", "Infobox film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+        text = pywikibot.replaceExcept(text, r"((I|i)nfobox Film|(I|i)nfobox (M|m)ovie|(I|i)nfobox_(f|F)ilm)", "Infobox film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         
         infoboxStart = text.find("Infobox film")
         #get infobox that is there.
@@ -236,8 +250,9 @@ class BasicBot:
             self.log.write("======" + page.title() + "======\n")
             self.log.write(self.logDiff(page.get(), text))
             self.log.write("\n\n")
+            self.log.write(text)
             
-            #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
