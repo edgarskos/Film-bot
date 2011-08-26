@@ -62,6 +62,8 @@ class BasicBot:
         self.generator = generator
         self.dry = dry
         self.imdbNum = "0"
+        self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
+        self.list = codecs.open('HasImageList.txt', 'w', 'utf-8')
         # Set the edit summary message
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
 
@@ -78,7 +80,8 @@ class BasicBot:
         if not text:
             return
 
-            
+        
+        noSearch = 1;
         ###FIND IF TEXT HAS IMAGE
         infoboxStart = text.find("Infobox film")
         #get infobox that is there.
@@ -103,27 +106,33 @@ class BasicBot:
             else:
               if field.split("=")[0].strip() == "image" and not field.split("=")[1].strip() == "":
                 pywikibot.output("Already has image")
+                noSearch = 1
+                #self.list.write("Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"\n")
+                Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+                Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"&action=edit")
+                choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
         elif(text.find(r"(i|I)nfobox") != -1): #infox doesn't exists
           pywikibot.output("Page doesn't have an infobox")
         
-        ####self.imdbNum = 
-        if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
-          if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
-            self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
-        
-            f = urllib.urlopen("http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
-            s = f.read()
-            f.close()
-            if(s.find("No movies found.") == -1):
-              chrome = "C:\Documents and Settings\michael ctr peppler\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
-              spChrome = subprocess.Popen(chrome+' '+"http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
-              spChrome2 = subprocess.Popen(chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title())
-            else:
-              pywikibot.output("No Image \""+page.title()+"\" -> IMDB = "+self.imdbNum)
-        else:
-          pywikibot.output("No IMDB link   " + page.title() + "   " + self.imdbNum)
+        if noSearch == 0 :
+          ####self.imdbNum = 
+          if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
+            if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
+              self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
           
-        choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+              f = urllib.urlopen("http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
+              s = f.read()
+              f.close()
+              if(s.find("No movies found.") == -1):
+                pywikibot.output("YES!  " + page.title())
+                spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
+                spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+                choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+              else:
+                pywikibot.output("No Image \""+page.title().encode('utf-8', 'replace')+"\" -> IMDB = "+self.imdbNum)
+          else:
+            pywikibot.output("No IMDB link   " + page.title().encode('utf-8', 'replace') + "   " + self.imdbNum)
+          
         
         #if not self.save(text, page, self.summary):
         #    pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
