@@ -94,7 +94,6 @@ class BasicBot:
           elif infoTemp[infoTempEnd:infoTempEnd+1] == "}":
             bracketCount -= 1
         self.infoboxTemplate = infoTemp[infoTempStart - 2:infoTempEnd+1]
-        pywikibot.output(self.infoboxTemplate)
         
         #Old way to do it with the template written out on the page with triple "{" in the infos
         #pywikibot.replaceExcept(re.search("{{Infobox film.*?[^}]}}[^}]", pywikibot.Page(pywikibot.getSite(), "Template:Infobox_film/doc").get(), re.S).group(), r"{{{.*?}}}", "", "")
@@ -130,7 +129,7 @@ class BasicBot:
         text = pywikibot.replaceExcept(text, r"\[\[Film\]\]", "Film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         text = pywikibot.replaceExcept(text, r"{{(Rottentomatoes|Rotten Tomatoes|Rotten tomatoes)", "{{Rotten-tomatoes", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         text = pywikibot.replaceExcept(text, r"{{(IMDB title|IMDBtitle|IMDb Title|Imdb movie|Imdb title|Imdb-title|Imdbtitle|imdb title)", "{{IMDb title", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        text = pywikibot.replaceExcept(text, r"{{(Amg title|Amg movie|Allmovie)\|", "{{Allmovie title|", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+        text = pywikibot.replaceExcept(text, r"{{(Amg title|Amg movie|Allmovie)\|", "{{AllRovi movie|", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         if(re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text)):
           text = text[:re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start()]+self.removeWikilink(text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start():re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end()]) + text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end():]
         
@@ -301,9 +300,9 @@ class BasicBot:
     
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
-      infobox = infobox.replace("<br>", "<br />") #convert old style breaks to new style
-      infobox = infobox.replace("<br/>", "<br />") #convert old style breaks to new style
-      infobox = infobox.replace("<BR>", "<br />") #convert old style breaks to new style
+      infobox = infobox.replace("<br />", "<br>") #convert old style breaks to new style
+      infobox = infobox.replace("<br/>", "<br>") #convert old style breaks to new style
+      infobox = infobox.replace("<BR>", "<br>") #convert old style breaks to new style
       newBox = self.infoboxTemplate
       infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|")
       for field in infoSplit:
@@ -372,18 +371,18 @@ class BasicBot:
                 refs += data[self.commentRegex.search(data).start():self.commentRegex.search(data).end()]
                 data = re.sub(self.commentRegex, "", data)
 
-              data = re.sub(",<br />", "<br />", data) #if there are commas and line breaks, oh my
+              data = re.sub(",<br>", "<br>", data) #if there are commas and line breaks, oh my
               if(field.split("=")[0].strip().lower() == "language"): #if the language is linked, unlink it.
                 data = self.removeWikilink(data)
               elif(field.split("=")[0].strip().lower() == "country" and not re.search("image:flag", data.lower()) and not re.search("file:flag", data.lower())):
-                data = re.sub("<br />", ", ", data)
+                #data = re.sub("<br>", ", ", data) Do I have to convert to commas?
                 data = self.removeWikilink(data)
                 data = filmfunctions.countryToTemplate(data)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower())):
                 data = re.sub("start", "film", data, 0, re.I)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{filmdate.*?}}", data.lower())):
                 data = re.sub("filmdate", "film date", data)
-              elif(field.split("=")[0].strip().lower() == "released" and not re.search("{{film date.*?}}", data.lower()) and data.find("<br />") == -1):
+              elif(field.split("=")[0].strip().lower() == "released" and not re.search("{{film date.*?}}", data.lower()) and data.find("<br>") == -1):
                 data = self.formatDate(data)
               elif(field.split("=")[0].strip().lower() == "runtime") :
                 data = self.removeWikilink(data)
@@ -431,47 +430,47 @@ class BasicBot:
               if movie.get('director'):
                 for name in movie.get('director'):
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "producer"):
               if movie.get('producer'):
                 for name in movie.get('producer')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "starring"):
               if movie.get('cast'):
                 for name in movie.get('cast')[0:4]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "music"):
               if movie.get('original music'):
                 for name in movie.get('original music')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "cinematography"):
               if movie.get('cinematographer'):
                 for name in movie.get('cinematographer')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "editing"):
               if movie.get('editor'):
                 for name in movie.get('editor')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "studio"):
               if movie.get('studio'):
                 for name in movie.get('studio')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "released"):
               if movie.get('release date'):
                 for date in movie.get('release date'):
                   data += self.formatDate(date) + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             #elif(field.split("=")[0].strip() == "writer"):
             #  if movie.get('writer'):
             #    for name in movie.get('writer'):
             #      data += name['name'] + "+"
-            #    infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+            #    infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "runtime"):
               if movie.get('runtime'):
                 try: 
@@ -486,7 +485,7 @@ class BasicBot:
               if movie.get('language'):
                 for name in movie.get('language'):
                   data += name + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br />", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
               
 
       return infobox
