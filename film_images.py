@@ -69,17 +69,18 @@ class BasicBot:
 
     def run(self):
         for page in self.generator:
-            self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")))
+            self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")), pywikibot.Page(pywikibot.getSite(), page.title()))
             
 
-    def treat(self, page):
+    def treat(self, page, talkPage):
         """
         Loads the given page, does some changes, and saves it.
         """
         text = self.load(page)
+        talkText = self.load(talkPage)
         if not text:
             return
-
+        pywikibot.output(page.title())
         
         noSearch = 1;
         ###FIND IF TEXT HAS IMAGE
@@ -107,6 +108,10 @@ class BasicBot:
               if field.split("=")[0].strip() == "image" and not field.split("=")[1].strip() == "":
                 pywikibot.output("Already has image")
                 noSearch = 1
+                talkText = talkText.replace("|needs-image=yes", "")
+                talkText = talkText.replace("start", "Start")
+                talkText = talkText.replace("stub", "Stub")
+                pywikibot.output(talkText)
                 #self.list.write("Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"\n")
                 Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
                 Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"&action=edit")
@@ -124,7 +129,7 @@ class BasicBot:
               s = f.read()
               f.close()
               if(s.find("No movies found.") == -1):
-                pywikibot.output("YES!  " + page.title())
+                pywikibot.output("YES!")
                 spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
                 spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
                 choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
