@@ -42,7 +42,7 @@ docuReplacements = {
     '&params;': pagegenerators.parameterHelp
 }
 
-class BasicBot:
+class FilmBot:
     # Edit summary message that should be used.
     # NOTE: Put a good description here, and add translations, if possible!
     msg = {
@@ -251,7 +251,7 @@ class BasicBot:
             self.log.write("\n\n")
             self.log.write(text)
             
-            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
@@ -576,7 +576,7 @@ def main():
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(gen)
-        bot = BasicBot(gen, dry)
+        bot = FilmBot(gen, dry)
         bot.run()
     else:
         pywikibot.showHelp()
