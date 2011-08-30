@@ -407,7 +407,9 @@ class BasicBot:
         newBox = re.sub("\| image size *=.*?\n", "", newBox)
       if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| narrator *=.*?\n", "", newBox)
-      
+      if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+        newBox = re.sub("\| border *=.*?\n", "", newBox)
+        
       if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)
       if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
