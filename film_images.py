@@ -31,12 +31,12 @@ import editarticle
 import sys
 from datetime import datetime
 import imdb
-import filmfunctions
 import difflib
 import codecs
 import itertools
 import urllib
 import subprocess
+import Film
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -63,7 +63,6 @@ class BasicBot:
         self.dry = dry
         self.imdbNum = "0"
         self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
-        self.list = codecs.open('HasImageList.txt', 'w', 'utf-8')
         # Set the edit summary message
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
 
@@ -82,7 +81,7 @@ class BasicBot:
             return
         pywikibot.output(page.title())
         
-        noSearch = 1;
+        noSearch = 0;
         ###FIND IF TEXT HAS IMAGE
         infoboxStart = text.find("Infobox film")
         #get infobox that is there.
@@ -108,11 +107,6 @@ class BasicBot:
               if field.split("=")[0].strip() == "image" and not field.split("=")[1].strip() == "":
                 pywikibot.output("Already has image")
                 noSearch = 1
-                talkText = talkText.replace("|needs-image=yes", "")
-                talkText = talkText.replace("start", "Start")
-                talkText = talkText.replace("stub", "Stub")
-                pywikibot.output(talkText)
-                #self.list.write("Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"\n")
                 Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
                 Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"&action=edit")
                 choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
@@ -130,6 +124,8 @@ class BasicBot:
               f.close()
               if(s.find("No movies found.") == -1):
                 pywikibot.output("YES!")
+                filmBot = Film.FilmBot(iter([page]), 1)
+                filmBot.run()
                 spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
                 spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
                 choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
