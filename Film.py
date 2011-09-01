@@ -93,7 +93,7 @@ class FilmBot:
             bracketCount += 1
           elif infoTemp[infoTempEnd:infoTempEnd+1] == "}":
             bracketCount -= 1
-        self.infoboxTemplate = infoTemp[infoTempStart - 2:infoTempEnd+1]
+        self.infoboxTemplate = re.sub(self.commentRegex, "", infoTemp[infoTempStart - 2:infoTempEnd+1])
         
         #Old way to do it with the template written out on the page with triple "{" in the infos
         #pywikibot.replaceExcept(re.search("{{Infobox film.*?[^}]}}[^}]", pywikibot.Page(pywikibot.getSite(), "Template:Infobox_film/doc").get(), re.S).group(), r"{{{.*?}}}", "", "")
@@ -252,6 +252,9 @@ class FilmBot:
             self.log.write(text)
             
             #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            #if choice == 'y':
+              #open the page
+            
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
@@ -409,9 +412,11 @@ class FilmBot:
         newBox = re.sub("\| narrator *=.*?\n", "", newBox)
       if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| border *=.*?\n", "", newBox)
-        
       if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-        newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)
+        newBox = re.sub("\| alt *=.*?\n", "", newBox)
+        
+      #if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+      #  newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)
       if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
       if re.search("\| released *=.*?\n", newBox).group().split("=")[1].strip() == "" :
@@ -538,7 +543,7 @@ class FilmBot:
       if(euDateRegex.search(justDate)): #if a EU date make the day appear first.
         options = "|df=y"
       data = "{{film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+options+"}}"
-      return data + " <!--{{Film date|year|month|day|location}}-->"
+      return data
       
 def main():
     # This factory is responsible for processing command line arguments
