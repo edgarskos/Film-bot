@@ -184,4 +184,4 @@ def countryToTemplate(countries):
       
     returned += data + "+"
 
-  return re.sub("\+", ", ", returned.rstrip("+"))
+  return re.sub("\+", "<br>", returned.rstrip("+"))
