@@ -37,6 +37,7 @@ import itertools
 import urllib
 import subprocess
 import Film
+import msvcrt
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -62,14 +63,57 @@ class BasicBot:
         self.generator = generator
         self.dry = dry
         self.imdbNum = "0"
-        self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
+        self.chrome = "C:\Documents and Settings\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
         # Set the edit summary message
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
+        self.hasImagestack = []
+        self.newImageDict = dict()
 
     def run(self):
         for page in self.generator:
             self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")), pywikibot.Page(pywikibot.getSite(), page.title()))
-            
+            key = self.kbfunc()
+            if(len(self.hasImagestack) > 10 or len(self.newImageDict) > 10): #don't let the stacks get too big
+              key = "h"
+            if (key == "o"):
+              if(len(self.hasImagestack) != 0):
+                self.doHasImage()
+              elif(len(self.newImageDict) != 0):
+                self.doNewImage()
+              else:
+                pywikibot.output("No Items on stack")
+            elif(key == "h"): #this is HELP, just do all items in all stacks.
+              while(len(self.newImageDict) != 0): #do all the ones that need an image
+                self.doNewImage()
+                choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+              while(len(self.hasImagestack) != 0): #then do all the ones that have an image
+                self.doHasImage()
+                choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            elif(key == "p"): #just pause if the key is P
+              choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+        #Finish off the rest of the stacks.
+        while(len(self.newImageDict) != 0):
+          self.doNewImage()
+          choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+        while(len(self.hasImagestack) != 0):
+          self.doHasImage()
+          choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+    
+    def kbfunc(self):
+      return msvcrt.getch() if msvcrt.kbhit() else "Z"
+      
+    def doNewImage(self):
+      ppp = self.newImageDict.popitem()
+      filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), ppp[0])]), 1)
+      filmBot.run()
+      spNotepad = subprocess.Popen("notepad C:\pywikipedia\log.txt")
+      spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+ppp[1])
+      spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+ppp[0].encode('utf-8', 'replace'))
+      
+    def doHasImage(self):
+      ppp = self.hasImagestack.pop()
+      Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+ppp)
+      Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+ppp+"&action=edit")
 
     def treat(self, page, talkPage):
         """
@@ -107,9 +151,7 @@ class BasicBot:
               if field.split("=")[0].strip() == "image" and not field.split("=")[1].strip() == "":
                 pywikibot.output("Already has image")
                 noSearch = 1
-                Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
-                Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"&action=edit")
-                choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+                self.hasImagestack.append(page.title().replace(" ", "_").encode('utf-8', 'replace'))
         elif(text.find(r"(i|I)nfobox") != -1): #infox doesn't exists
           pywikibot.output("Page doesn't have an infobox")
         
@@ -119,20 +161,16 @@ class BasicBot:
             if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
               self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
           
-              f = urllib.urlopen("http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
+              f = urllib.urlopen("http://www.movieposterdb.com/search/?query="+self.imdbNum)
               s = f.read()
               f.close()
-              if(s.find("No movies found.") == -1):
+              if(s.find("No results") == -1):
                 pywikibot.output("YES!")
-                filmBot = Film.FilmBot(iter([page]), 1)
-                filmBot.run()
-                spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/browse/search?type=movies&query="+self.imdbNum)
-                spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
-                choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+                self.newImageDict[page.title().replace(" ", "_")] = self.imdbNum
               else:
-                pywikibot.output("No Image \""+page.title().encode('utf-8', 'replace')+"\" -> IMDB = "+self.imdbNum)
+                pywikibot.output("No Image -> IMDB = "+self.imdbNum)
           else:
-            pywikibot.output("No IMDB link   " + page.title().encode('utf-8', 'replace') + "   " + self.imdbNum)
+            pywikibot.output("No IMDB link  " + self.imdbNum)
           
         
         #if not self.save(text, page, self.summary):
