@@ -9,6 +9,7 @@ import imdb
 import re
 import Film
 import sys
+import codecs
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -63,11 +64,13 @@ class InfoboxBot:
         text = self.load(page)
         if not text:
             return
-            
+        
+        newBox = ""
+        
         ####self.imdbNum = 
-        if re.subn("{{IMDb title.*?}}", "", text)[1] == 1: #If there is only 1 imdb link on the page search for the info
-          if re.search("[0-9]{6,7}", re.search("{{IMDb title.*?}}", text).group()):
-            self.imdbNum = re.search("[0-9]{6,7}", re.search("{{IMDb title.*?}}", text).group()).group()
+        if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
+          if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
+            self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
         else:
           self.imdbNum = 0
         
@@ -102,14 +105,14 @@ class InfoboxBot:
         else:
           if(field.split("=")[1].strip() == ""): #fill in fields without data
             if(field.split("=")[0].strip() == "name"):
-              data = pageTitle
+              data = movie['title']
               infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             if(field.split("=")[0].strip() == "image") and self.img:
               if(movie.get('year')):
                 year = str(movie.get('year'))
               else:
                 year = ""
-              data = re.sub(" ", "", pageTitle) + year + ".jpg"
+              data = re.sub(" ", "", movie['title']) + year + ".jpg"
               infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
               
       return infobox
