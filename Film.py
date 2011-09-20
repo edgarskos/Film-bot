@@ -46,7 +46,6 @@ class FilmBot:
         self.generator = generator
         self.dry = dry
         self.imdbNum = 0
-        self.count = 0
         self.templateRegex = re.compile("{{.*}}") #This is how templates are in wikipedia
         self.referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
         self.commentRegex = re.compile("<!--.*?-->")
@@ -86,7 +85,7 @@ class FilmBot:
             return
         
         #The page can only be edited if something major changes
-        self.canEditPage = 0
+        self.canEditPage = 1
         self.summary = "(CinemaBot trial) [[Wikipedia:Bots/Requests for approval/CinemaBot|Comment or Discuss]]"
         
         #Fix the plot heading
@@ -103,15 +102,16 @@ class FilmBot:
           self.summary = "External Link header fix." + self.summary
           self.canEditPage = 1
         #fix awards heading to accolades
-        if(re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text)):
-          text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(A|a)wards *\=+", re.sub(" *\w+ *", " Accolades ", re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-          self.summary = "Awards -> Accolades. " + self.summary
-          self.canEditPage = 1
+        #if(re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text)):
+        #  pywikibot.output(re.sub(" *\w+ *", " Accolades ", re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text).group()))
+        #  text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(A|a)wards *\=+", re.sub(" *\w+ *", " Accolades ", re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'timeline'])
+        #  self.summary = "Awards -> Accolades. " + self.summary
+        #  self.canEditPage = 1
         #fix dvd release to home media
-        if(re.search("([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", text)):
-          text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", re.sub(" *\w+ \w+ *", " Home media ", re.search("([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-          self.summary = "Home media header fix. " + self.summary
-          self.canEditPage = 1
+        #if(re.search("([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", text)):
+        #  text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", re.sub(" *\w+ \w+ *", " Home media ", re.search("([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'timeline'])
+        #  self.summary = "Home media header fix. " + self.summary
+        #  self.canEditPage = 1
         #unwiki-link united states
         text = pywikibot.replaceExcept(text, r"\[\[(U|u)nited (S|s)tates\]\]", "United States", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         #unwiki-link film
@@ -236,12 +236,12 @@ class FilmBot:
             # show what was changed
             pywikibot.showDiff(page.get(), text)
             
+            self.log.write(comment+"\n")
             self.log.write("======" + page.title() + "======\n")
             self.log.write(self.logDiff(page.get(), text))
             self.log.write("\n\n")
             self.log.write(text)
             
-            pywikibot.output(str(self.count))
             #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             #if choice == 'y':
               #open the page
@@ -253,24 +253,23 @@ class FilmBot:
                     u'Do you want to accept these changes?',
                     ['Yes', 'No'], ['y', 'N'], 'N')
                 if choice == 'y':
-                    try:
-                        # Save the page
-                        page.put(text.encode('utf-8', 'replace'), comment=comment,
-                                 minorEdit=minorEdit, botflag=botflag)
-                    except pywikibot.LockedPage:
-                        pywikibot.output(u"Page %s is locked; skipping."
-                                         % page.title(asLink=True))
-                    except pywikibot.EditConflict:
-                        pywikibot.output(
-                            u'Skipping %s because of edit conflict'
-                            % (page.title()))
-                    except pywikibot.SpamfilterError, error:
-                        pywikibot.output(
-                            u'Cannot change %s because of spam blacklist entry %s'
-                            % (page.title(), error.url))
-                    else:
-                        self.count += 1
-                        return True
+                  try:
+                      # Save the page
+                      page.put(text, comment=comment,
+                               minorEdit=minorEdit, botflag=botflag)
+                  except pywikibot.LockedPage:
+                      pywikibot.output(u"Page %s is locked; skipping."
+                                       % page.title(asLink=True))
+                  except pywikibot.EditConflict:
+                      pywikibot.output(
+                          u'Skipping %s because of edit conflict'
+                          % (page.title()))
+                  except pywikibot.SpamfilterError, error:
+                      pywikibot.output(
+                          u'Cannot change %s because of spam blacklist entry %s'
+                          % (page.title(), error.url))
+                  else:
+                      return True
         return False
         
     #remove any possible wikilinks by searching through them one at a time
@@ -296,9 +295,9 @@ class FilmBot:
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
       unusedFields = ""
-      infobox = infobox.replace("<br />", "<br>") #convert old style breaks to new style
-      infobox = infobox.replace("<br/>", "<br>") #convert old style breaks to new style
-      infobox = infobox.replace("<BR>", "<br>") #convert old style breaks to new style
+      #infobox = infobox.replace("<br />", "<br>") #convert old style breaks to new style
+      #infobox = infobox.replace("<br/>", "<br>") #convert old style breaks to new style
+      #infobox = infobox.replace("<BR>", "<br>") #convert old style breaks to new style
       newBox = self.infoboxTemplate
       infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|")
       for field in infoSplit:
@@ -372,7 +371,7 @@ class FilmBot:
                 tmp = self.removeWikilink(data)
                 if(data != tmp):
                   data = tmp
-                  self.canEditePage = 1
+                  self.canEditPage = 1
                   self.summary = "Unwikilink language. " + self.summary
               elif(field.split("=")[0].strip().lower() == "country" and not re.search("image:flag", data.lower()) and not re.search("file:flag", data.lower())):
                 #data = re.sub("<br>", ", ", data) Do I have to convert to commas?
@@ -380,16 +379,18 @@ class FilmBot:
                 tmp = filmfunctions.countryToTemplate(data)
                 if(data != tmp):
                   data = tmp
-                  self.canEditePage = 1
+                  self.canEditPage = 1
                   self.summary = "Add country template. " + self.summary
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower())):
-                data = re.sub("start", "film", data, 0, re.I)
+                data = re.sub("start", "Film", data, 0, re.I)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{filmdate.*?}}", data.lower())):
-                data = re.sub("filmdate", "film date", data)
+                data = re.sub("filmdate", "Film date", data)
               elif(field.split("=")[0].strip().lower() == "released" and not re.search("{{film date.*?}}", data.lower()) and data.find("<br>") == -1):
-                self.canEditPage = 1
-                self.summary = "date to film date template. " + self.summary
-                data = self.formatDate(data)
+                tmp = self.formatDate(data)
+                if(data != tmp):
+                  data = tmp
+                  self.canEditPage = 1
+                  self.summary = "released to film date. " + self.summary
               elif(field.split("=")[0].strip().lower() == "runtime") :
                 data = self.removeWikilink(data)
                 data = re.sub("(min(\.)|mins\.|mins|min)(?!utes)", "minutes", data)
@@ -411,7 +412,7 @@ class FilmBot:
                 unusedFields += "| " + field.strip() + "\n"
 
       #if(self.imdbNum != 0): lol, probably no
-      #  newBox = self.addImdbInfo(newBox)
+      #  newBox = self.addImdbInfo(newBox, imdb.IMDb().get_movie(self.imdbNum))
         
       #remove typically unused parameters
       if re.search("\| image size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
@@ -431,12 +432,13 @@ class FilmBot:
         newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)
       
       if(unusedFields != ""):
-        newBox = newBox[:len(newBox)-2] + unusedFields + newBox[len(newBox)-2:]
-        self.summary = "Bad fields moved. " + self.summary
+        newBox = newBox[:len(newBox)-2] + "<!-- unsupported parameters -->\n" + unusedFields + newBox[len(newBox)-2:]
+        self.summary = "Unsupported parameters moved. " + self.summary
       return newBox.strip()
       
-    def addImdbInfo(self, infobox):
-      movie = imdb.IMDb().get_movie(self.imdbNum)
+    def addImdbInfo(self, infobox, movie):
+      imdb.IMDb().update(movie, info=('release dates',)) #get the release date page
+      
       for field in re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|"):
         data = ""
         try: field.split("=")[1]
@@ -445,7 +447,7 @@ class FilmBot:
         else:
           if(field.split("=")[1].strip() == ""): #fill in fields without data
             if(field.split("=")[0].strip() == "director"):
-              if movie.get('director'):
+              if movie.has_key('director'):
                 for name in movie.get('director'):
                   data += name['name'] + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
@@ -480,15 +482,16 @@ class FilmBot:
                   data += name['name'] + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "released"):
-              if movie.get('release date'):
-                for date in movie.get('release date'):
+              if movie.get('release dates'):
+                for date in movie.get('release dates')[0:1]:
+                  date = date.split("::")[1] + "(" + date.split("::")[0] + ")"
                   data += self.formatDate(date) + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
-            #elif(field.split("=")[0].strip() == "writer"):
-            #  if movie.get('writer'):
-            #    for name in movie.get('writer'):
-            #      data += name['name'] + "+"
-            #    infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+            elif(field.split("=")[0].strip() == "writer"):
+              if movie.get('writer'):
+                for name in movie.get('writer'):
+                  data += name['name'] + "+"
+                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "runtime"):
               if movie.get('runtime'):
                 try: 
@@ -553,7 +556,9 @@ class FilmBot:
         place = re.search("\([.A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
       if(euDateRegex.search(justDate)): #if a EU date make the day appear first.
         options = "|df=y"
-      data = "{{film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+options+"}}"
+      data = "{{Film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+options+"}}"
+      if(month == "" or day == ""):
+        data += "<!-- {{Film date|Year|Month|Day|Location}} -->"
       return data
       
 def main():
