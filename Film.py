@@ -449,7 +449,7 @@ class FilmBot:
             if(field.split("=")[0].strip() == "director"):
               if movie.has_key('director'):
                 for name in movie.get('director'):
-                  data += name['name'] + "+"
+                  data += "[[" + name['name'] + "]]+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "producer"):
               if movie.get('producer'):
@@ -459,7 +459,7 @@ class FilmBot:
             elif(field.split("=")[0].strip() == "starring"):
               if movie.get('cast'):
                 for name in movie.get('cast')[0:4]:
-                  data += name['name'] + "+"
+                  data += "[[" + name['name'] + "]]+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
             elif(field.split("=")[0].strip() == "music"):
               if movie.get('original music'):
