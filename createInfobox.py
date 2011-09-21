@@ -10,6 +10,7 @@ import re
 import Film
 import sys
 import codecs
+import subprocess
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -22,7 +23,7 @@ class InfoboxBot:
     # The file containing these messages should have the same name as the caller
     # script (i.e. basic.py in this case)
 
-    def __init__(self, generator, img):
+    def __init__(self, generator, img, info):
         """
         Constructor. Parameters:
             @param generator: The page generator that determines on which pages
@@ -33,8 +34,9 @@ class InfoboxBot:
         # Set the edit summary message
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
         
-        self.log = codecs.open('logInfobox.txt', 'w', 'utf-8')
+        self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
         self.img = img
+        self.info = info
         self.imdbNum = 0
         self.templateRegex = re.compile("{{.*}}") #This is how templates are in wikipedia
         self.referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
@@ -55,7 +57,7 @@ class InfoboxBot:
 
     def run(self):
         for page in self.generator:
-            self.treat(page)
+            self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")))
 
     def treat(self, page):
         """
@@ -66,36 +68,50 @@ class InfoboxBot:
             return
         
         newBox = ""
-        
-        ####self.imdbNum = 
-        if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
-          if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
-            self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
-        else:
-          self.imdbNum = 0
-        
-        
-        if(self.imdbNum != 0):
-          movie = imdb.IMDb().get_movie(self.imdbNum)
-          filmBot = Film.FilmBot(page, 1)
-          newBox = filmBot.addImdbInfo(self.infoboxTemplate, movie)
-          newBox = self.addNewInfo(newBox, page.title(), movie)
+        self.imdbNum = 0
+        infoboxStart = text.find("Infobox film")
+        #get infobox that is there.
+        if infoboxStart == -1 or self.info: #infobox exists
+          ####self.imdbNum = 
+          if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
+            if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
+              self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
+          else:
+            self.imdbNum = 0
+          
+          
+          if(self.imdbNum != 0):
+            movie = imdb.IMDb().get_movie(self.imdbNum)
+            filmBot = Film.FilmBot(page, 1)
+            newBox = filmBot.addImdbInfo(self.infoboxTemplate, movie)
+            newBox = self.addNewInfo(newBox, page.title(), movie)
+                  
+            #remove typically unused parameters
+            if re.search("\| image size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| image size *=.*?\n", "", newBox)
+            if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| narrator *=.*?\n", "", newBox)
+            if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| border *=.*?\n", "", newBox)
+            if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| alt *=.*?\n", "", newBox)
+            if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
+            if re.search("\| released *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)              
                 
-          #remove typically unused parameters
-          if re.search("\| image size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-            newBox = re.sub("\| image size *=.*?\n", "", newBox)
-          if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-            newBox = re.sub("\| narrator *=.*?\n", "", newBox)
-          if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-            newBox = re.sub("\| border *=.*?\n", "", newBox)
-          if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-            newBox = re.sub("\| alt *=.*?\n", "", newBox)
-          if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-            newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
-              
-        pywikibot.output(newBox)
-        self.log.write(newBox)
-    
+            pywikibot.output(newBox)
+            log = codecs.open('logInfobox.txt', 'w', 'utf-8')
+            log.write(newBox)
+            log.close()
+            spNotepad = subprocess.Popen("notepad C:\pywikipedia\logInfobox.txt")
+            spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+        else:
+          pywikibot.output("HAS Infobox")
+          spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+          choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            
     def addNewInfo(self, infobox, pageTitle, movie):
       for field in re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|"):
         data = ""
@@ -103,12 +119,15 @@ class InfoboxBot:
         except IndexError:
           sys.exc_clear() #skip it if there is an index error, means it has no "=", invalid field
         else:
-          if(field.split("=")[1].strip() == ""): #fill in fields without data
-            if(field.split("=")[0].strip() == "name"):
-              data = movie['title']
+          if field.split("=")[1].strip() == "": #fill in fields without data
+            if field.split("=")[0].strip() == "name":
+              if movie.has_key('title'):
+                data = movie['title']
+              else:
+                data = page.title()
               infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
-            if(field.split("=")[0].strip() == "image") and self.img:
-              if(movie.get('year')):
+            if (field.split("=")[0].strip() == "image") and self.img:
+              if movie.has_key('year'):
                 year = str(movie.get('year'))
               else:
                 year = ""
@@ -145,11 +164,14 @@ def main():
     # page to work on is specified by the arguments.
     pageTitleParts = []
     img = False
+    info = False
 
     # Parse command line arguments
     for arg in pywikibot.handleArgs():
       if arg.startswith("-img"):
         img = True
+      elif arg.startswith("-info"):
+        info = True
       else:
         # check if a standard argument like
         # -start:XYZ or -ref:Asdf was given.
@@ -168,7 +190,7 @@ def main():
       # The preloading generator is responsible for downloading multiple
       # pages from the wiki simultaneously.
       gen = pagegenerators.PreloadingGenerator(gen)
-      bot = InfoboxBot(gen, img)
+      bot = InfoboxBot(gen, img, info)
       bot.run()
     else:
       pywikibot.showHelp()
