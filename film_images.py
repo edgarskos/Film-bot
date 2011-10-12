@@ -73,7 +73,7 @@ class BasicBot:
         for page in self.generator:
             self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")), pywikibot.Page(pywikibot.getSite(), page.title()))
             key = self.kbfunc()
-            if(len(self.hasImagestack) > 10 or len(self.newImageDict) > 10): #don't let the stacks get too big
+            if(len(self.hasImagestack) > 50 or len(self.newImageDict) > 50): #don't let the stacks get too big
               key = "h"
             if (key == "o"):
               if(len(self.hasImagestack) != 0):
