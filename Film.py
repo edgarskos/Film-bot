@@ -24,6 +24,7 @@ import filmfunctions
 import difflib
 import codecs
 import itertools
+import subprocess
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -43,6 +44,7 @@ class FilmBot:
             * dry       - If True, doesn't do any real changes, but only shows
                           what would have been changed.
         """
+        self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
         self.generator = generator
         self.dry = dry
         self.imdbNum = 0
@@ -81,11 +83,12 @@ class FilmBot:
         Loads the given page, does some changes, and saves it.
         """
         text = self.load(page)
+        self.log = codecs.open('log.txt', 'w', 'utf-8')
         if not text:
             return
         
         #The page can only be edited if something major changes
-        self.canEditPage = 1
+        self.canEditPage = 0
         self.summary = "(CinemaBot trial) [[Wikipedia:Bots/Requests for approval/CinemaBot|Comment or Discuss]]"
         
         #Fix the plot heading
@@ -100,7 +103,7 @@ class FilmBot:
         if(re.search("([\r\n]|^)\=+ *External Links *\=+", text)):
           text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *External Links *\=+", re.sub(" *\w+ *\w+ *", " External links ", re.search("([\r\n]|^)\=+ *External Links *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
           self.summary = "External Link header fix." + self.summary
-          self.canEditPage = 1
+          #self.canEditPage = 1
         #fix awards heading to accolades
         #if(re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text)):
         #  pywikibot.output(re.sub(" *\w+ *", " Accolades ", re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text).group()))
@@ -241,8 +244,11 @@ class FilmBot:
             self.log.write(self.logDiff(page.get(), text))
             self.log.write("\n\n")
             self.log.write(text)
+            self.log.close()
             
-            #choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+            spNotepad = subprocess.Popen("notepad C:\pywikipedia\log.txt")
+            spChrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
+            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             #if choice == 'y':
               #open the page
             
@@ -295,9 +301,9 @@ class FilmBot:
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
       unusedFields = ""
-      #infobox = infobox.replace("<br />", "<br>") #convert old style breaks to new style
-      #infobox = infobox.replace("<br/>", "<br>") #convert old style breaks to new style
-      #infobox = infobox.replace("<BR>", "<br>") #convert old style breaks to new style
+      infobox = infobox.replace("<br />", "<br>") #convert old style breaks to new style
+      infobox = infobox.replace("<br/>", "<br>") #convert old style breaks to new style
+      infobox = infobox.replace("<BR>", "<br>") #convert old style breaks to new style
       newBox = self.infoboxTemplate
       infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|")
       for field in infoSplit:
@@ -396,6 +402,8 @@ class FilmBot:
                 data = re.sub("(min(\.)|mins\.|mins|min)(?!utes)", "minutes", data)
               elif(field.split("=")[0].strip().lower() == "distributor"):
                 data = re.sub("{{flag.?icon.*?}}", "", data, 0, re.I).strip()
+              elif(field.split("=")[0].strip().lower() == "producer"):
+                data = re.sub(",", "<br>", data)
             
                 
                 
@@ -421,13 +429,25 @@ class FilmBot:
         newBox = re.sub("\| narrator *=.*?\n", "", newBox)
       if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| border *=.*?\n", "", newBox)
-      if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-        newBox = re.sub("\| alt *=.*?\n", "", newBox)
-        
-      #if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-      #  newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)
       if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-        newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
+        newBox = re.sub("\| based on *=.*?\n", "", newBox)
+      #if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+      #  newBox = re.sub("\| alt *=.*?\n", "", newBox)
+      if not re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" : #remove these fields if it has a writer and they're empty
+        if re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+          newBox = re.sub("\| story *=.*?\n", "", newBox)
+        if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+          newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
+      elif not re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" : #remove these fields if it has a writer and they're empty
+        if re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+          newBox = re.sub("\| writer *=.*?\n", "", newBox)
+        if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+          newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
+        
+      if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+        newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)
+      #if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+      #  newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
       if re.search("\| released *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)
       
