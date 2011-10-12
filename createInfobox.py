@@ -23,7 +23,7 @@ class InfoboxBot:
     # The file containing these messages should have the same name as the caller
     # script (i.e. basic.py in this case)
 
-    def __init__(self, generator, img, info):
+    def __init__(self, generator, img, info, imdb):
         """
         Constructor. Parameters:
             @param generator: The page generator that determines on which pages
@@ -37,6 +37,7 @@ class InfoboxBot:
         self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
         self.img = img
         self.info = info
+        self.imdb = imdb
         self.imdbNum = 0
         self.templateRegex = re.compile("{{.*}}") #This is how templates are in wikipedia
         self.referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
@@ -76,6 +77,8 @@ class InfoboxBot:
           if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
             if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
               self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
+          elif self.imdb:
+              self.imdbNum = pywikibot.input("input IMDB num")
           else:
             self.imdbNum = 0
           
@@ -93,19 +96,33 @@ class InfoboxBot:
               newBox = re.sub("\| narrator *=.*?\n", "", newBox)
             if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
               newBox = re.sub("\| border *=.*?\n", "", newBox)
-            if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| alt *=.*?\n", "", newBox)
             if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
+              newBox = re.sub("\| based on *=.*?\n", "", newBox)
+            if not re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              if re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+                newBox = re.sub("\| story *=.*?\n", "", newBox)
+              if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+                 newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
+            elif not re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" : #remove these fields if it has a writer and they're empty
+              if re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+                newBox = re.sub("\| writer *=.*?\n", "", newBox)
+              if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+                newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
+              
+            #add how to to fields
+            #if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            #  newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
             if re.search("\| released *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)              
+              newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)
+            if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)              
                 
             pywikibot.output(newBox)
             log = codecs.open('logInfobox.txt', 'w', 'utf-8')
             log.write(newBox)
             log.close()
             spNotepad = subprocess.Popen("notepad C:\pywikipedia\logInfobox.txt")
-            spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+            spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
             choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
         else:
           pywikibot.output("HAS Infobox")
@@ -124,7 +141,7 @@ class InfoboxBot:
               if movie.has_key('title'):
                 data = movie['title']
               else:
-                data = page.title()
+                data = pageTitle
               infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             if (field.split("=")[0].strip() == "image") and self.img:
               if movie.has_key('year'):
@@ -165,6 +182,7 @@ def main():
     pageTitleParts = []
     img = False
     info = False
+    imdb = False
 
     # Parse command line arguments
     for arg in pywikibot.handleArgs():
@@ -172,6 +190,8 @@ def main():
         img = True
       elif arg.startswith("-info"):
         info = True
+      elif arg.startswith("-imdb"):
+        imdb = True
       else:
         # check if a standard argument like
         # -start:XYZ or -ref:Asdf was given.
@@ -190,7 +210,7 @@ def main():
       # The preloading generator is responsible for downloading multiple
       # pages from the wiki simultaneously.
       gen = pagegenerators.PreloadingGenerator(gen)
-      bot = InfoboxBot(gen, img, info)
+      bot = InfoboxBot(gen, img, info, imdb)
       bot.run()
     else:
       pywikibot.showHelp()
