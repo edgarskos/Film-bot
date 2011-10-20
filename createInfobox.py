@@ -1,6 +1,19 @@
 #!/usr/bin/python
 # -*- coding: utf-8  -*-
-#
+"""
+The following parameters are supported:
+
+&params;
+
+-img              If given, doesn't do any real changes, but only shows
+                  what would have been changed.
+-info             Get the infobox data anyway, even if the page has an infobox                 
+-imdb             If the page doesn't have an IMDB link, let the user input the number
+                  instead of skipping the page.
+
+All other parameters will be regarded as part of the title of a single page,
+and the bot will only work on that single page.
+"""
 
 import wikipedia as pywikibot
 import pagegenerators
@@ -57,77 +70,77 @@ class InfoboxBot:
         self.infoboxTemplate = re.sub(self.commentRegex, "", infoTemp[infoTempStart - 2:infoTempEnd+1])
 
     def run(self):
-        for page in self.generator:
-            self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")))
+      for page in self.generator:
+        self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")))
 
     def treat(self, page):
-        """
-        Loads the given page, does some changes, and saves it.
-        """
-        text = self.load(page)
-        if not text:
-            return
-        
-        newBox = ""
-        self.imdbNum = 0
-        infoboxStart = text.find("Infobox film")
-        #get infobox that is there.
-        if infoboxStart == -1 or self.info: #infobox exists
-          ####self.imdbNum = 
-          if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
-            if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
-              self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
-          elif self.imdb:
-              self.imdbNum = pywikibot.input("input IMDB num")
-          else:
-            self.imdbNum = 0
-          
-          
-          if(self.imdbNum != 0):
-            movie = imdb.IMDb().get_movie(self.imdbNum)
-            filmBot = Film.FilmBot(page, 1)
-            newBox = filmBot.addImdbInfo(self.infoboxTemplate, movie)
-            newBox = self.addNewInfo(newBox, page.title(), movie)
-                  
-            #remove typically unused parameters
-            if re.search("\| image size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| image size *=.*?\n", "", newBox)
-            if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| narrator *=.*?\n", "", newBox)
-            if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| border *=.*?\n", "", newBox)
-            if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| based on *=.*?\n", "", newBox)
-            if not re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              if re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-                newBox = re.sub("\| story *=.*?\n", "", newBox)
-              if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-                 newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
-            elif not re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" : #remove these fields if it has a writer and they're empty
-              if re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-                newBox = re.sub("\| writer *=.*?\n", "", newBox)
-              if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-                newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
-              
-            #add how to to fields
-            #if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-            #  newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
-            if re.search("\| released *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)
-            if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-              newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)              
-                
-            pywikibot.output(newBox)
-            log = codecs.open('logInfobox.txt', 'w', 'utf-8')
-            log.write(newBox)
-            log.close()
-            spNotepad = subprocess.Popen("notepad C:\pywikipedia\logInfobox.txt")
-            spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
-            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+      """
+      Loads the given page, does some changes, and saves it.
+      """
+      text = self.load(page)
+      if not text:
+          return
+      
+      newBox = ""
+      self.imdbNum = 0
+      infoboxStart = text.find("Infobox film")
+      #get infobox that is there.
+      if infoboxStart == -1 or self.info: #infobox exists
+        ####self.imdbNum = 
+        if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
+          if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
+            self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
+        elif self.imdb:
+            self.imdbNum = int(pywikibot.input(page.title() + ": input IMDB num"))
         else:
-          pywikibot.output("HAS Infobox")
-          spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+          self.imdbNum = 0
+        
+        
+        if(self.imdbNum != 0):
+          movie = imdb.IMDb().get_movie(self.imdbNum)
+          filmBot = Film.FilmBot(page, 1)
+          newBox = filmBot.addImdbInfo(self.infoboxTemplate, movie)
+          newBox = self.addNewInfo(newBox, page.title(), movie)
+                
+          #remove typically unused parameters
+          if re.search("\| image size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            newBox = re.sub("\| image size *=.*?\n", "", newBox)
+          if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            newBox = re.sub("\| narrator *=.*?\n", "", newBox)
+          if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            newBox = re.sub("\| border *=.*?\n", "", newBox)
+          if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            newBox = re.sub("\| based on *=.*?\n", "", newBox)
+          if not re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            if re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| story *=.*?\n", "", newBox)
+            if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+               newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
+          elif not re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" : #remove these fields if it has a writer and they're empty
+            if re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| writer *=.*?\n", "", newBox)
+            if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+              newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
+            
+          #add how to to fields
+          #if re.search("\| based on *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+          #  newBox = re.sub("\| based on *=.*?\n", "| based on       = <!-- {{based on|title of the original work|writer of the original work}} -->\n", newBox)
+          if re.search("\| released *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)
+          if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)              
+              
+          pywikibot.output(newBox)
+          log = codecs.open('logInfobox.txt', 'w', 'utf-8')
+          log.write(newBox)
+          log.close()
+          spNotepad = subprocess.Popen("notepad C:\pywikipedia\logInfobox.txt")
+          spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
           choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+      else:
+        pywikibot.output("HAS Infobox")
+        spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+        choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
     def addNewInfo(self, infobox, pageTitle, movie):
       for field in re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|"):
