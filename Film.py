@@ -377,7 +377,7 @@ class FilmBot:
                 tmp = self.removeWikilink(data)
                 if(data != tmp):
                   data = tmp
-                  self.canEditPage = 1
+                  #self.canEditPage = 1
                   self.summary = "Unwikilink language. " + self.summary
               elif(field.split("=")[0].strip().lower() == "country" and not re.search("image:flag", data.lower()) and not re.search("file:flag", data.lower())):
                 #data = re.sub("<br>", ", ", data) Do I have to convert to commas?
@@ -567,7 +567,7 @@ class FilmBot:
       #only 1 item is usually just the year
       elif(len(justDate.split()) == 1 and justDate.isdigit()):
         format = re.sub("[0-9]{4}", "%Y", justDate) #convert what is in the data field to what format it is in datetime.
-        date = datetime.strptime(re.sub("\([A-Za-z ]+\)", "", data).strip(), format) #convert to date
+        date = datetime.strptime(re.sub("\([A-Za-z. ]+\)", "", data).strip(), format) #convert to date
       #see if there is a place to add  
       try: re.search("\([.A-Za-z ]+\)", data).group()
       except AttributeError:
