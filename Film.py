@@ -443,6 +443,11 @@ class FilmBot:
           newBox = re.sub("\| writer *=.*?\n", "", newBox)
         if re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" :
           newBox = re.sub("\| screenplay *=.*?\n", "", newBox)
+      elif not re.search("\| screenplay *=.*?\n", newBox).group().split("=")[1].strip() == "" : #remove these fields if it has a writer and they're empty
+        if re.search("\| writer *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+          newBox = re.sub("\| writer *=.*?\n", "", newBox)
+        if re.search("\| story *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+          newBox = re.sub("\| story *=.*?\n", "", newBox)
         
       if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)
@@ -452,6 +457,8 @@ class FilmBot:
         newBox = re.sub("\| released *=.*?\n", "| released       = <!-- {{Film date|Year|Month|Day|Location}} -->\n", newBox)
       
       if(unusedFields != ""):
+        if not re.search("italic title", unusedFields.lower()) :
+          self.canEditPage = 1
         newBox = newBox[:len(newBox)-2] + "<!-- unsupported parameters -->\n" + unusedFields + newBox[len(newBox)-2:]
         self.summary = "Unsupported parameters moved. " + self.summary
       return newBox.strip()
