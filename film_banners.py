@@ -26,16 +26,19 @@ class FilmBannerBot:
   def __init__(self, generator):
     self.generator = generator
     self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
+    self.count = 0
     
   def run(self):
     for page in self.generator:
       #pywikibot.output(page.title())
-      self.check(pywikibot.Page(pywikibot.getSite(), "Talk:"+page.title().replace("Talk:", "")))
+      if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1):
+        self.check(pywikibot.Page(pywikibot.getSite(), "Talk:"+page.title().replace("Talk:", "")), pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")))
   
-  def check(self, talkPage):
+  def check(self, talkPage, page):
     text = self.load(talkPage)
     if not text:
-      self.open(talkPage)
+      if self.load(page): #only open talk pages that aren't on redirects. Freaking WP:CAT
+        self.open(talkPage)
     elif not re.search("\{\{(wp|wikiproject)?.?film", text.lower()):
       self.open(talkPage)
     #else:
@@ -43,6 +46,10 @@ class FilmBannerBot:
     #                     % talkPage.title(asLink=True))
   
   def open(self, talkPage):
+    if self.count == 10:
+      choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+      self.count = 0
+    self.count += 1
     Chrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+talkPage.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
     
   def load(self, page):
