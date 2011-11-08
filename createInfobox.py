@@ -205,6 +205,10 @@ def main():
         info = True
       elif arg.startswith("-imdb"):
         imdb = True
+      elif arg.startswith("-reg"):
+        arg = '-cat:Film articles needing an infobox'
+        if not genFactory.handleArg(arg):
+          pageTitleParts.append(arg)
       else:
         # check if a standard argument like
         # -start:XYZ or -ref:Asdf was given.
