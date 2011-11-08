@@ -30,15 +30,17 @@ class FilmBannerBot:
     
   def run(self):
     for page in self.generator:
-      #pywikibot.output(page.title())
-      if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1):
+      pywikibot.output(page.title())
+      if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1 and page.title().lower().find("category:") == -1):
         self.check(pywikibot.Page(pywikibot.getSite(), "Talk:"+page.title().replace("Talk:", "")), pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")))
   
   def check(self, talkPage, page):
     text = self.load(talkPage)
+    text2 = self.load(page)
     if not text:
-      if self.load(page): #only open talk pages that aren't on redirects. Freaking WP:CAT
-        self.open(talkPage)
+      if text2: #only open talk pages that aren't on redirects. Freaking WP:CAT
+        if not text2.lower().find("infobox television"):
+          self.open(talkPage)
     elif not re.search("\{\{(wp|wikiproject)?.?film", text.lower()):
       self.open(talkPage)
     #else:
