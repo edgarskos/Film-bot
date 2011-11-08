@@ -184,6 +184,8 @@ def main():
 
     # Parse command line arguments
     for arg in pywikibot.handleArgs():
+      if arg.startswith("-reg"):
+        arg = '-cat:Film articles needing an image'
       if not genFactory.handleArg(arg):
         pageTitleParts.append(arg)
 
