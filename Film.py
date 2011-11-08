@@ -137,6 +137,8 @@ class FilmBot:
         text = pywikibot.replaceExcept(text, r"((I|i)nfobox Film|(I|i)nfobox (M|m)ovie|(I|i)nfobox_(f|F)ilm)", "Infobox film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         
         infoboxStart = text.find("Infobox film")
+        if text.lower().find("infobox filmfare awards") != -1 or text.lower().find("infobox film festival") != -1:
+          infoboxStart = -1
         #get infobox that is there.
         if infoboxStart != -1: #infobox exists
           #find the end of the infobox but must account for other templates that are inside the infobox. Search for ending brackets by each character. For each
@@ -305,7 +307,7 @@ class FilmBot:
       infobox = infobox.replace("<br/>", "<br>") #convert old style breaks to new style
       infobox = infobox.replace("<BR>", "<br>") #convert old style breaks to new style
       newBox = self.infoboxTemplate
-      infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|")
+      infoSplit = re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox), flags=re.DOTALL).split("|")
       for field in infoSplit:
         try: field.split("=")[1]
         except IndexError:
@@ -405,8 +407,6 @@ class FilmBot:
               elif(field.split("=")[0].strip().lower() == "producer"):
                 data = re.sub(",", "<br>", data)
             
-                
-                
               data += refs #attach the references and comments again
                 
               #Break it down: Take everything before where I want to insert the info + the old info I found between the equals sign and the last "|" + everything
