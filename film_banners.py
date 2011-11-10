@@ -40,7 +40,6 @@ class FilmBannerBot:
     if not talkText:
       if pageText: #only open talk pages that aren't on redirects. Freaking WP:CAT
         if pageText.lower().find("infobox television") == -1:
-          pywikibot.output("YES")
           self.open(talkPage)
     elif not re.search("\{\{(wp|wikiproject)?.?film", talkText.lower()):
       if not pageText.lower().find("infobox television") == -1:
@@ -50,11 +49,12 @@ class FilmBannerBot:
   def check2(self, talkText, pageText):
     if not talkText:
       if pageText: #only open talk pages that aren't on redirects. Freaking WP:CAT
-        if not pageText.lower().find("infobox television"):
-          return true
+        if pageText.lower().find("infobox television") == -1:
+          return True
     elif not re.search("\{\{(wp|wikiproject)?.?film", talkText.lower()):
-      if not pageText.lower().find("infobox television"):
-        return true
+      if pageText.lower().find("infobox television") == -1:
+        return True
+    return False
   
   def open(self, talkPage):
     if self.count == 10:
