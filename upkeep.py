@@ -10,7 +10,6 @@ import pagegenerators
 import Film
 import film_banners as Banner
 
-
 def main():
   genFactory = pagegenerators.GeneratorFactory()
   args = []
@@ -39,12 +38,19 @@ def main():
     if gen:
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
-        gen = pagegenerators.PreloadingGenerator(gen)
+        gen = pagegenerators.PreloadingGenerator(pagegenerators.PageWithTalkPageGenerator(gen))
         filmBot = Film.FilmBot(gen, True)
-        filmBot.run()
         bannerBot = Banner.FilmBannerBot(gen)
-          bannerBot.run()
-      
+        for page in gen:
+          if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1 and page.title().lower().find("category:") == -1):
+            if not page.isTalkPage():
+              pageText = filmBot.load(page)
+              filmBot.treat(page, pageText)
+            else:
+              talkText = filmBot.load(page)
+              if bannerBot.check2(talkText, pageText):
+                bannerBot.open(page)
+     
 if __name__ == "__main__":
     try:
         main()

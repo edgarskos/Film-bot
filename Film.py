@@ -76,13 +76,12 @@ class FilmBot:
         
     def run(self):
         for page in self.generator:
-            self.treat(page)
+            self.treat(page, self.load(page))
             
-    def treat(self, page):
+    def treat(self, page, text):
         """
         Loads the given page, does some changes, and saves it.
         """
-        text = self.load(page)
         self.log = codecs.open('log.txt', 'w', 'utf-8')
         if not text:
             return

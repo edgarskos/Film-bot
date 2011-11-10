@@ -32,20 +32,29 @@ class FilmBannerBot:
     for page in self.generator:
       pywikibot.output(page.title())
       if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1 and page.title().lower().find("category:") == -1):
-        self.check(pywikibot.Page(pywikibot.getSite(), "Talk:"+page.title().replace("Talk:", "")), pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")))
+        self.check(page.toggleTalkPage(), page)
   
   def check(self, talkPage, page):
-    text = self.load(talkPage)
-    text2 = self.load(page)
-    if not text:
-      if text2: #only open talk pages that aren't on redirects. Freaking WP:CAT
-        if not text2.lower().find("infobox television"):
+    talkText = self.load(talkPage)
+    pageText = self.load(page)
+    if not talkText:
+      if pageText: #only open talk pages that aren't on redirects. Freaking WP:CAT
+        if pageText.lower().find("infobox television") == -1:
+          pywikibot.output("YES")
           self.open(talkPage)
-    elif not re.search("\{\{(wp|wikiproject)?.?film", text.lower()):
-      self.open(talkPage)
-    #else:
-    #  pywikibot.output(u"Page %s is fine; skipping."
-    #                     % talkPage.title(asLink=True))
+    elif not re.search("\{\{(wp|wikiproject)?.?film", talkText.lower()):
+      if not pageText.lower().find("infobox television") == -1:
+        self.open(talkPage)
+  
+  #Use for upkeep, brings in texts.
+  def check2(self, talkText, pageText):
+    if not talkText:
+      if pageText: #only open talk pages that aren't on redirects. Freaking WP:CAT
+        if not pageText.lower().find("infobox television"):
+          return true
+    elif not re.search("\{\{(wp|wikiproject)?.?film", talkText.lower()):
+      if not pageText.lower().find("infobox television"):
+        return true
   
   def open(self, talkPage):
     if self.count == 10:
