@@ -15,15 +15,12 @@ from pywikibot import i18n
 import re
 import editarticle
 import sys
-from datetime import datetime
-import imdb
-import difflib
 import codecs
-import itertools
 import urllib
 import subprocess
 import Film
 import msvcrt
+import filmfunctions
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -53,26 +50,27 @@ class FilmImageBot:
 
     def run(self):
       for page in self.generator:
-          self.treat(pywikibot.Page(pywikibot.getSite(), page.title().replace("Talk:", "")), pywikibot.Page(pywikibot.getSite(), page.title()))
-          key = self.kbfunc()
-          if(len(self.hasImagestack) > 50 or len(self.newImageDict) > 50): #don't let the stacks get too big
-            key = "h"
-          if (key == "o"):
-            if(len(self.hasImagestack) != 0):
-              self.doHasImage()
-            elif(len(self.newImageDict) != 0):
-              self.doNewImage()
-            else:
-              pywikibot.output("No Items on stack")
-          elif(key == "h"): #this is HELP, just do all items in all stacks.
-            while(len(self.newImageDict) != 0): #do all the ones that need an image
-              self.doNewImage()
-              choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
-            while(len(self.hasImagestack) != 0): #then do all the ones that have an image
-              self.doHasImage()
-              choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
-          elif(key == "p"): #just pause if the key is P
+        text = self.load(page)
+        self.treat(text, page.title())
+        key = self.kbfunc()
+        if(len(self.hasImagestack) > 50 or len(self.newImageDict) > 50): #don't let the stacks get too big
+          key = "h"
+        if (key == "o"):
+          if(len(self.hasImagestack) != 0):
+            self.doHasImage()
+          elif(len(self.newImageDict) != 0):
+            self.doNewImage()
+          else:
+            pywikibot.output("No Items on stack")
+        elif(key == "h"): #this is HELP, just do all items in all stacks.
+          while(len(self.newImageDict) != 0): #do all the ones that need an image
+            self.doNewImage()
             choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+          while(len(self.hasImagestack) != 0): #then do all the ones that have an image
+            self.doHasImage()
+            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+        elif(key == "p"): #just pause if the key is P
+          choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
       #Finish off the rest of the stacks.
       while(len(self.newImageDict) != 0):
         self.doNewImage()
@@ -97,15 +95,13 @@ class FilmImageBot:
       Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+ppp)
       Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+ppp+"&action=edit")
 
-    def treat(self, page, talkPage):
+    def treat(self, text, title):
         """
         Loads the given page, does some changes, and saves it.
         """
-        text = self.load(page)
-        talkText = self.load(talkPage)
         if not text:
             return
-        pywikibot.output(page.title())
+        pywikibot.output(title)
         
         noSearch = 0;
         ###FIND IF TEXT HAS IMAGE
@@ -133,7 +129,7 @@ class FilmImageBot:
               if field.split("=")[0].strip() == "image" and not field.split("=")[1].strip() == "":
                 pywikibot.output("Already has image")
                 noSearch = 1
-                self.hasImagestack.append(page.title().replace(" ", "_").encode('utf-8', 'replace'))
+                self.hasImagestack.append(title.replace(" ", "_").encode('utf-8', 'replace'))
         elif(text.find(r"(i|I)nfobox") != -1): #infox doesn't exists
           pywikibot.output("Page doesn't have an infobox")
         
@@ -148,7 +144,7 @@ class FilmImageBot:
               f.close()
               if(s.find("No results") == -1):
                 pywikibot.output("YES!")
-                self.newImageDict[page.title().replace(" ", "_")] = self.imdbNum
+                self.newImageDict[title.replace(" ", "_")] = self.imdbNum
               else:
                 pywikibot.output("No Image -> IMDB = "+self.imdbNum)
           else:
@@ -200,7 +196,7 @@ def main():
     if gen:
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
-        gen = pagegenerators.PreloadingGenerator(gen)
+        gen = pagegenerators.PreloadingGenerator(filmfunctions.PagesFromTalkPagesGenerator(gen))
         bot = FilmImageBot(gen)
         bot.run()
     else:

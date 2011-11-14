@@ -1,4 +1,5 @@
 import re
+import pagegenerators
 
 def countryToTemplate(countries):
   returned = ""
@@ -185,3 +186,13 @@ def countryToTemplate(countries):
     returned += data + "+"
 
   return re.sub("\+", "<br>", returned.rstrip("+"))
+  
+  
+def PagesFromTalkPagesGenerator(generator):
+    """
+    Wraps around another generator. Yields the same pages, but for talk
+    pages, it returns associated article pages.
+    This generator does not check if the article page in fact exists.
+    """
+    for page in generator:
+      yield page.toggleTalkPage()
