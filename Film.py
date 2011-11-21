@@ -36,7 +36,7 @@ class FilmBot:
     # Edit summary message that should be used.
     # NOTE: Put a good description here, and add translations, if possible!
 
-    def __init__(self, generator, dry):
+    def __init__(self, generator, dry, html):
         """
         Constructor. Parameters:
             * generator - The page generator that determines on which pages
@@ -47,15 +47,17 @@ class FilmBot:
         self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
         self.generator = generator
         self.dry = dry
+        self.html = html
         self.imdbNum = 0
         self.templateRegex = re.compile("{{.*}}") #This is how templates are in wikipedia
         self.referenceRegex = re.compile("(<ref.*?/(ref)?>)+")
         self.commentRegex = re.compile("<!--.*?-->")
         self.wikilinkRegex = re.compile("\[\[.*\|.*\]\]")
-        self.log = codecs.open('log.txt', 'w', 'utf-8')
+        self.log = codecs.open('filmLog.diff', 'w', 'utf-8')
+        self.filmLogLinks = codecs.open('filmLogLinks.html', 'w', 'utf-8')
         self.canEditPage = 0
         # Set the edit summary message
-        self.summary = "(CinemaBot trial) [[Wikipedia:Bots/Requests for approval/CinemaBot|Comment or Discuss]]"
+        self.summary = ""
         linktrail = pywikibot.getSite().linktrail()
         self.linkR = re.compile(r'\[\[(?P<title>[^\]\|#]*)(?P<section>#[^\]\|]*)?(\|(?P<label>[^\]]*))?\]\](?P<linktrail>' + linktrail + ')')
         #Gets the infobox template from the documentation page.
@@ -82,18 +84,20 @@ class FilmBot:
         """
         Loads the given page, does some changes, and saves it.
         """
-        self.log = codecs.open('log.txt', 'w', 'utf-8')
+        if not self.html:
+          self.log = codecs.open('filmLog.diff', 'w', 'utf-8')
         if not text:
             return
         
+        cleanInfobox = ""
         #The page can only be edited if something major changes
         self.canEditPage = 0
-        self.summary = "(CinemaBot trial) [[Wikipedia:Bots/Requests for approval/CinemaBot|Comment or Discuss]]"
+        self.summary = ""
         
         #Fix the plot heading
         if(re.search("([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", text)):
           text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", re.sub(" *\w+ *\w+ *", " Plot ", re.search("([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-          self.summary = "Plot header fix. " + self.summary
+          #self.summary = "Plot header fix. " + self.summary
           self.canEditPage = 1
         #fix image_size
         if(re.search("image_size", text)):
@@ -101,7 +105,7 @@ class FilmBot:
         #fix external link heading
         if(re.search("([\r\n]|^)\=+ *External Links *\=+", text)):
           text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *External Links *\=+", re.sub(" *\w+ *\w+ *", " External links ", re.search("([\r\n]|^)\=+ *External Links *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-          self.summary = "External Link header fix." + self.summary
+          #self.summary = "External Link header fix." + self.summary
           #self.canEditPage = 1
         #fix awards heading to accolades
         #if(re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text)):
@@ -152,11 +156,12 @@ class FilmBot:
             elif text[infoboxEnd:infoboxEnd+1] == "}":
               bracketCount -= 1
           infobox = text[infoboxStart:infoboxEnd-1]
-          text = text[:infoboxStart-2] + self.infoboxCleanup(infobox) + text[infoboxEnd+1:] #replace old infobox with new one and put it where the old one was.
+          cleanInfobox = self.infoboxCleanup(infobox)
+          text = text[:infoboxStart-2] + cleanInfobox + text[infoboxEnd+1:] #replace old infobox with new one and put it where the old one was.
         elif(text.find(r"(i|I)nfobox") != -1): #infox doesn't exists
           text = text #self.infoboxTemplate + text
           
-        if not self.save(text, page, self.summary):
+        if not self.save(text, page, self.summary, cleanInfobox):
           pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
           
           #pywikibot.output(text.encode('utf-8', 'replace'))
@@ -230,7 +235,7 @@ class FilmBot:
             return text
         return None
 
-    def save(self, text, page, comment, minorEdit=False, botflag=True):
+    def save(self, text, page, comment, cleanInfobox, minorEdit=False, botflag=False):
         # only save if something was changed
         if text != page.get() and self.canEditPage:
             # Show the title of the page we're working on.
@@ -244,15 +249,17 @@ class FilmBot:
             self.log.write("======" + page.title() + "======\n")
             self.log.write(self.logDiff(page.get(), text))
             self.log.write("\n\n")
-            self.log.write(text)
-            self.log.close()
+            self.log.write(cleanInfobox)
+            self.log.write("\n\n")
+            if not self.html:
+              self.log.close()
             
-            spNotepad = subprocess.Popen("notepad C:\pywikipedia\log.txt")
-            spChrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
-            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
-            #if choice == 'y':
-              #open the page
-            
+            if self.html:
+              self.filmLogLinks.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+page.title().replace(" ", "_")+'?action=edit">'+page.title()+'</a><br />'+"\n")
+            elif self.dry:
+              spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmLog.diff')
+              spChrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
+              choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
             pywikibot.output(u'Comment: %s' %comment)
             if not self.dry:
@@ -277,6 +284,10 @@ class FilmBot:
                           % (page.title(), error.url))
                   else:
                       return True
+                else:
+                  spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmLog.diff')
+                  spChrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
+                  choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
         return False
         
     #remove any possible wikilinks by searching through them one at a time
@@ -379,7 +390,7 @@ class FilmBot:
                 if(data != tmp):
                   data = tmp
                   #self.canEditPage = 1
-                  self.summary = "Unwikilink language. " + self.summary
+                  #self.summary = "Unwikilink language. " + self.summary
               elif(field.split("=")[0].strip().lower() == "country" and not re.search("image:flag", data.lower()) and not re.search("file:flag", data.lower())):
                 #data = re.sub("<br>", ", ", data) Do I have to convert to commas?
                 data = self.removeWikilink(data)
@@ -387,7 +398,10 @@ class FilmBot:
                 if(data != tmp):
                   data = tmp
                   self.canEditPage = 1
-                  self.summary = "Add country template. " + self.summary
+                  if self.summary.find("film date") != -1:
+                    self.summary = self.summary.replace("template.", "+ country templates")
+                  else:
+                    self.summary = "Use country template. " + self.summary
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{start date.*?}}", data.lower())):
                 data = re.sub("start", "Film", data, 0, re.I)
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{filmdate.*?}}", data.lower())):
@@ -397,7 +411,10 @@ class FilmBot:
                 if(data != tmp):
                   data = tmp
                   self.canEditPage = 1
-                  self.summary = "released to film date. " + self.summary
+                  if self.summary.find("country") != -1:
+                    self.summary = self.summary.replace("template.", "+ film date templates")
+                  else:
+                    self.summary = "use film date template. " + self.summary
               elif(field.split("=")[0].strip().lower() == "runtime") :
                 data = self.removeWikilink(data)
                 data = re.sub("(min(\.)|mins\.|mins|min)(?!utes)", "minutes", data)
@@ -459,7 +476,7 @@ class FilmBot:
         if not re.search("italic title", unusedFields.lower()) :
           self.canEditPage = 1
         newBox = newBox[:len(newBox)-2] + "<!-- unsupported parameters -->\n" + unusedFields + newBox[len(newBox)-2:]
-        self.summary = "Unsupported parameters moved. " + self.summary
+        self.summary = "fix/rm unsupported parameter. " + self.summary
       return newBox.strip()
       
     def addImdbInfo(self, infobox, movie):
@@ -600,11 +617,14 @@ def main():
     # If dry is True, doesn't do any real changes, but only show
     # what would have been changed.
     dry = False
+    html = False
 
     # Parse command line arguments
     for arg in pywikibot.handleArgs():
         if arg.startswith("-dry"):
             dry = True
+        elif arg.startswith("-htm"):
+            html = True
         else:
             # check if a standard argument like
             # -start:XYZ or -ref:Asdf was given.
@@ -623,7 +643,7 @@ def main():
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(gen)
-        bot = FilmBot(gen, dry)
+        bot = FilmBot(gen, dry, html)
         bot.run()
     else:
         pywikibot.showHelp()

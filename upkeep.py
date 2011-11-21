@@ -39,7 +39,7 @@ def main():
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(pagegenerators.PageWithTalkPageGenerator(gen))
-        filmBot = Film.FilmBot(gen, True)
+        filmBot = Film.FilmBot(gen, True, False)
         bannerBot = Banner.FilmBannerBot(gen)
         for page in gen:
           if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1 and page.title().lower().find("category:") == -1):
