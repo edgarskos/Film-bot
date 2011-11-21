@@ -33,7 +33,7 @@ class FilmImageBot:
     # The file containing these messages should have the same name as the caller
     # script (i.e. basic.py in this case)
 
-    def __init__(self, generator):
+    def __init__(self, generator, html):
         """
         Constructor. Parameters:
             @param generator: The page generator that determines on which pages
@@ -47,63 +47,39 @@ class FilmImageBot:
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
         self.hasImagestack = []
         self.newImageDict = dict()
+        self.html = html
+        self.file = codecs.open('filmImages.html', 'w', 'utf-8')
 
     def run(self):
       for page in self.generator:
         text = self.load(page)
-        self.treat(text, page.title())
-        key = self.kbfunc()
-        if(len(self.hasImagestack) > 50 or len(self.newImageDict) > 50): #don't let the stacks get too big
-          key = "h"
-        if (key == "o"):
-          if(len(self.hasImagestack) != 0):
-            self.doHasImage()
-          elif(len(self.newImageDict) != 0):
-            self.doNewImage()
-          else:
-            pywikibot.output("No Items on stack")
-        elif(key == "h"): #this is HELP, just do all items in all stacks.
-          while(len(self.newImageDict) != 0): #do all the ones that need an image
-            self.doNewImage()
-            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
-          while(len(self.hasImagestack) != 0): #then do all the ones that have an image
-            self.doHasImage()
-            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
-        elif(key == "p"): #just pause if the key is P
-          choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
-      #Finish off the rest of the stacks.
-      while(len(self.newImageDict) != 0):
-        self.doNewImage()
-        choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
-      while(len(self.hasImagestack) != 0):
-        self.doHasImage()
-        choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+        self.treat(text, page)
+
     
     def kbfunc(self):
       return msvcrt.getch() if msvcrt.kbhit() else "Z"
       
-    def doNewImage(self):
-      ppp = self.newImageDict.popitem()
-      filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), ppp[0])]), 1)
+    def doNewImage(self, title, imdb):
+      filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), title)]), 1)
       filmBot.run()
       spNotepad = subprocess.Popen("notepad C:\pywikipedia\log.txt")
-      spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+ppp[1])
-      spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+ppp[0].encode('utf-8', 'replace'))
+      spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+imdb)
+      spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.encode('utf-8', 'replace'))
       
-    def doHasImage(self):
-      ppp = self.hasImagestack.pop()
-      Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+ppp)
-      Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+ppp+"&action=edit")
+    #def doHasImage(self, title):
+      
+     # Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+title+"&action=edit")
 
-    def treat(self, text, title):
+    def treat(self, text, page):
         """
         Loads the given page, does some changes, and saves it.
         """
+        title = page.title()
         if not text:
             return
         pywikibot.output(title)
         
-        noSearch = 0;
+        noSearch = 1;
         ###FIND IF TEXT HAS IMAGE
         infoboxStart = text.find("Infobox film")
         #get infobox that is there.
@@ -129,12 +105,18 @@ class FilmImageBot:
               if field.split("=")[0].strip() == "image" and not field.split("=")[1].strip() == "":
                 pywikibot.output("Already has image")
                 noSearch = 1
-                self.hasImagestack.append(title.replace(" ", "_").encode('utf-8', 'replace'))
+                if not self.html:
+                  ###ALREADY HAS IMAGE LOGIC#####
+                  Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
+                  text = self.load(page.toggleTalkPage())
+                  text = text.replace("|needs-image=yes", "")
+                  self.save(text, page.toggleTalkPage(), "update film banner (has image)")
+                else:
+                  self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a><br />'+"\n")
         elif(text.find(r"(i|I)nfobox") != -1): #infox doesn't exists
           pywikibot.output("Page doesn't have an infobox")
         
         if noSearch == 0 :
-          ####self.imdbNum = 
           if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
             if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
               self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
@@ -144,7 +126,12 @@ class FilmImageBot:
               f.close()
               if(s.find("No results") == -1):
                 pywikibot.output("YES!")
-                self.newImageDict[title.replace(" ", "_")] = self.imdbNum
+                ####HAS NEW IMAGE LOGIC#####
+                if not self.html:
+                  #self.newImageDict[title.replace(" ", "_")] = self.imdbNum
+                  self.doNewImage(title.replace(" ", "_"), self.imdbNum)
+                else:
+                  self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a><br />'+"\n")
               else:
                 pywikibot.output("No Image -> IMDB = "+self.imdbNum)
           else:
@@ -166,6 +153,43 @@ class FilmImageBot:
       else:
           return text
       return None
+      
+    def save(self, text, page, comment, minorEdit=False, botflag=False):
+        # only save if something was changed
+        if text != page.get():
+          # Show the title of the page we're working on.
+          # Highlight the title in purple.
+          pywikibot.output(u"\n\n>>> \03{lightpurple}%s\03{default} <<<"
+                           % page.title())
+          # show what was changed
+          pywikibot.showDiff(page.get(), text)
+          
+          pywikibot.output(u'Comment: %s' %comment)
+          choice = pywikibot.inputChoice(
+            u'Do you want to accept these changes?',
+            ['Yes', 'No'], ['y', 'N'], 'N')
+          if choice == 'y':
+            try:
+                # Save the page
+                page.put(text, comment=comment,
+                         minorEdit=minorEdit, botflag=botflag)
+            except pywikibot.LockedPage:
+                pywikibot.output(u"Page %s is locked; skipping."
+                                 % page.title(asLink=True))
+            except pywikibot.EditConflict:
+                pywikibot.output(
+                    u'Skipping %s because of edit conflict'
+                    % (page.title()))
+            except pywikibot.SpamfilterError, error:
+                pywikibot.output(
+                    u'Cannot change %s because of spam blacklist entry %s'
+                    % (page.title(), error.url))
+            else:
+                return True
+          #else:
+          #  Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+title+"&action=edit")
+                  
+        return False
 
 def main():
     # This factory is responsible for processing command line arguments
@@ -174,16 +198,20 @@ def main():
     genFactory = pagegenerators.GeneratorFactory()
     # The generator gives the pages that should be worked upon.
     gen = None
+    html = False
     # This temporary array is used to read the page title if one single
     # page to work on is specified by the arguments.
     pageTitleParts = []
 
     # Parse command line arguments
     for arg in pywikibot.handleArgs():
-      if arg.startswith("-reg"):
-        arg = '-cat:Film articles needing an image'
-      if not genFactory.handleArg(arg):
-        pageTitleParts.append(arg)
+      if arg.startswith("-htm"):
+        html = True
+      else:
+        if arg.startswith("-reg"):
+          arg = '-cat:Film articles needing an image'
+        if not genFactory.handleArg(arg):
+          pageTitleParts.append(arg)
 
     if pageTitleParts != []:
         # We will only work on a single page.
@@ -197,7 +225,7 @@ def main():
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(filmfunctions.PagesFromTalkPagesGenerator(gen))
-        bot = FilmImageBot(gen)
+        bot = FilmImageBot(gen, html)
         bot.run()
     else:
         pywikibot.showHelp()
