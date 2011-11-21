@@ -37,13 +37,8 @@ class FilmBannerBot:
   def check(self, talkPage, page):
     talkText = self.load(talkPage)
     pageText = self.load(page)
-    if not talkText:
-      if pageText: #only open talk pages that aren't on redirects. Freaking WP:CAT
-        if pageText.lower().find("infobox television") == -1:
-          self.open(talkPage)
-    elif not re.search("\{\{(wp|wikiproject)?.?film", talkText.lower()):
-      if not pageText.lower().find("infobox television") == -1:
-        self.open(talkPage)
+    if self.check2(talkText, pageText): #yes I need to change this name
+      self.open(talkPage)        
   
   #Use for upkeep, brings in texts.
   def check2(self, talkText, pageText):
@@ -52,9 +47,10 @@ class FilmBannerBot:
         if pageText.lower().find("infobox television") == -1:
           return True
     elif not re.search("\{\{(wp|wikiproject)?.?film", talkText.lower()):
-      if pageText.lower().find("infobox television") == -1:
+      if pageText.lower().find("infobox television") == -1 and talkText.lower().find("wikiProject anime and manga") == -1:
         return True
     return False
+  
   
   def open(self, talkPage):
     if self.count == 10:
