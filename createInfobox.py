@@ -24,6 +24,7 @@ import Film
 import sys
 import codecs
 import subprocess
+import filmfunctions
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -98,7 +99,7 @@ class InfoboxBot:
         
         if(self.imdbNum != 0):
           movie = imdb.IMDb().get_movie(self.imdbNum)
-          filmBot = Film.FilmBot(page, 1)
+          filmBot = Film.FilmBot(page, True, False)
           newBox = filmBot.addImdbInfo(self.infoboxTemplate, movie)
           newBox = self.addNewInfo(newBox, page.title(), movie)
                 
@@ -130,17 +131,39 @@ class InfoboxBot:
           if re.search("\| alt *=.*?\n", newBox).group().split("=")[1].strip() == "" :
             newBox = re.sub("\| alt *=.*?\n", "| alt            = <!-- see WP:ALT -->\n", newBox)              
               
-          pywikibot.output(newBox)
+          #pywikibot.output(newBox)
           log = codecs.open('logInfobox.txt', 'w', 'utf-8')
           log.write(newBox)
           log.close()
-          spNotepad = subprocess.Popen("notepad C:\pywikipedia\logInfobox.txt")
-          spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
-          choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+          start = 0
+          while text[start:start+1] == "{":
+            start += 2
+            bracketCount = 2
+            while bracketCount != 0 :
+              start += 1
+              if text[start:start+1] == "{":
+                bracketCount += 1
+              elif text[start:start+1] == "}":
+                  bracketCount -= 1
+            start += 1
+            while re.search("\s", text[start:start+1]):
+              start += 1
+          text = filmBot.standardFixes(text)
+          text = text[:start] +newBox + "\n" + text[start:]
+          if self.save(text, page, "add infobox"):
+            text = self.load(page.toggleTalkPage())
+            text = text.replace("|needs-infobox=yes", "")
+            self.save(text, page.toggleTalkPage(), "update film banner (has infobox)")
+          else:
+            spNotepad = subprocess.Popen("notepad C:\pywikipedia\logInfobox.txt")
+            spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
+            choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
       else:
         pywikibot.output("HAS Infobox")
         spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
-        choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
+        text = self.load(page.toggleTalkPage())
+        text = text.replace("|needs-infobox=yes", "")
+        self.save(text, page.toggleTalkPage(), "update film banner (has infobox)")
             
     def addNewInfo(self, infobox, pageTitle, movie):
       for field in re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|"):
@@ -182,6 +205,40 @@ class InfoboxBot:
         else:
             return text
         return None
+        
+    def save(self, text, page, comment, minorEdit=False, botflag=False):
+      # only save if something was changed
+      if text != page.get():
+        # Show the title of the page we're working on.
+        # Highlight the title in purple.
+        pywikibot.output(u"\n\n>>> \03{lightpurple}%s\03{default} <<<"
+                         % page.title())
+        # show what was changed
+        pywikibot.showDiff(page.get(), text)
+        
+        pywikibot.output(u'Comment: %s' %comment)
+        choice = pywikibot.inputChoice(
+          u'Do you want to accept these changes?',
+          ['Yes', 'No'], ['y', 'N'], 'N')
+        if choice == 'y':
+          try:
+              # Save the page
+              page.put(text, comment=comment,
+                       minorEdit=minorEdit, botflag=botflag)
+          except pywikibot.LockedPage:
+              pywikibot.output(u"Page %s is locked; skipping."
+                               % page.title(asLink=True))
+          except pywikibot.EditConflict:
+              pywikibot.output(
+                  u'Skipping %s because of edit conflict'
+                  % (page.title()))
+          except pywikibot.SpamfilterError, error:
+              pywikibot.output(
+                  u'Cannot change %s because of spam blacklist entry %s'
+                  % (page.title(), error.url))
+          else:
+              return True
+      return False
         
 def main():
     # This factory is responsible for processing command line arguments
@@ -226,7 +283,7 @@ def main():
     if gen:
       # The preloading generator is responsible for downloading multiple
       # pages from the wiki simultaneously.
-      gen = pagegenerators.PreloadingGenerator(gen)
+      gen = pagegenerators.PreloadingGenerator(filmfunctions.PagesFromTalkPagesGenerator(gen))
       bot = InfoboxBot(gen, img, info, imdb)
       bot.run()
     else:
