@@ -8,6 +8,9 @@ The following parameters are supported:
 
 -dry              If given, doesn't do any real changes, but only shows
                   what would have been changed.
+                  
+-htm              Creates a log file with all the changes and an html page
+                  with links to the changed pages.
 
 All other parameters will be regarded as part of the title of a single page,
 and the bot will only work on that single page.
@@ -94,19 +97,9 @@ class FilmBot:
         self.canEditPage = 0
         self.summary = ""
         
-        #Fix the plot heading
-        if(re.search("([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", text)):
-          text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", re.sub(" *\w+ *\w+ *", " Plot ", re.search("([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-          #self.summary = "Plot header fix. " + self.summary
-          self.canEditPage = 1
         #fix image_size
-        if(re.search("image_size", text)):
-          text = pywikibot.replaceExcept(text, "image_size", "image size", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        #fix external link heading
-        if(re.search("([\r\n]|^)\=+ *External Links *\=+", text)):
-          text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *External Links *\=+", re.sub(" *\w+ *\w+ *", " External links ", re.search("([\r\n]|^)\=+ *External Links *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-          #self.summary = "External Link header fix." + self.summary
-          #self.canEditPage = 1
+        #if(re.search("image_size", text)):
+        #  text = pywikibot.replaceExcept(text, "image_size", "image size", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         #fix awards heading to accolades
         #if(re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text)):
         #  pywikibot.output(re.sub(" *\w+ *", " Accolades ", re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text).group()))
@@ -118,16 +111,7 @@ class FilmBot:
         #  text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", re.sub(" *\w+ \w+ *", " Home media ", re.search("([\r\n]|^)\=+ *(DVD|dvd) (R|r)elease *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'timeline'])
         #  self.summary = "Home media header fix. " + self.summary
         #  self.canEditPage = 1
-        #unwiki-link united states
-        text = pywikibot.replaceExcept(text, r"\[\[(U|u)nited (S|s)tates\]\]", "United States", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        #unwiki-link film
-        text = pywikibot.replaceExcept(text, r"\[\[film\]\]", "film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        text = pywikibot.replaceExcept(text, r"\[\[Film\]\]", "Film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        text = pywikibot.replaceExcept(text, r"{{(Rottentomatoes|Rotten Tomatoes|Rotten tomatoes)", "{{Rotten-tomatoes", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        text = pywikibot.replaceExcept(text, r"{{(IMDB title|IMDBtitle|IMDb Title|Imdb movie|Imdb title|Imdb-title|Imdbtitle|imdb title)", "{{IMDb title", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        text = pywikibot.replaceExcept(text, r"{{(Amg title|Amg movie|Allmovie)\|", "{{AllRovi movie|", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
-        if(re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text)):
-          text = text[:re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start()]+self.removeWikilink(text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start():re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end()]) + text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end():]
+        text = self.standardFixes(text)
         
         ####self.imdbNum = 
         if re.subn("{{IMDb title.*?}}", "", text)[1] == 1: #If there is only 1 imdb link on the page search for the info
@@ -165,6 +149,27 @@ class FilmBot:
           pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
           
           #pywikibot.output(text.encode('utf-8', 'replace'))
+    
+    def standardFixes(self, text):
+      #Fix the plot heading
+      if(re.search("([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", text)):
+        text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", re.sub(" *\w+ *\w+ *", " Plot ", re.search("([\r\n]|^)\=+ *(t|T)he (P|p)lot *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      #fix external link heading
+      if(re.search("([\r\n]|^)\=+ *External Links *\=+", text)):
+        text = pywikibot.replaceExcept(text, r"([\r\n]|^)\=+ *External Links *\=+", re.sub(" *\w+ *\w+ *", " External links ", re.search("([\r\n]|^)\=+ *External Links *\=+", text).group()), ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      #unwiki-link united states
+      text = pywikibot.replaceExcept(text, r"\[\[(U|u)nited (S|s)tates\]\]", "United States", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      #unwiki-link film
+      text = pywikibot.replaceExcept(text, r"\[\[film\]\]", "film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      text = pywikibot.replaceExcept(text, r"\[\[Film\]\]", "Film", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      text = pywikibot.replaceExcept(text, r"{{(Rottentomatoes|Rotten Tomatoes|Rotten tomatoes)", "{{Rotten-tomatoes", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      text = pywikibot.replaceExcept(text, r"{{(IMDB title|IMDBtitle|IMDb Title|Imdb movie|Imdb title|Imdb-title|Imdbtitle|imdb title)", "{{IMDb title", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      text = pywikibot.replaceExcept(text, r"{{(Amg title|Amg movie|Allmovie)\|", "{{AllRovi movie|", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+      if(re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text)):
+        text = text[:re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start()]+self.removeWikilink(text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).start():re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end()]) + text[re.search("\[\[[0-9]{4} in film\|[0-9]{4}\]\]", text).end():]
+      if(re.search("\[\[[0-9]{4} in film\|[0-9]{4} film\]\]", text)):
+        text = text[:re.search("\[\[[0-9]{4} in film\|[0-9]{4} film\]\]", text).start()]+self.removeWikilink(text[re.search("\[\[[0-9]{4} in film\|[0-9]{4} film\]\]", text).start():re.search("\[\[[0-9]{4} in film\|[0-9]{4} film\]\]", text).end()]) + text[re.search("\[\[[0-9]{4} in film\|[0-9]{4} film\]\]", text).end():]
+      return text
           
     def logDiff(self, oldtext, newtext):
       # This is probably not portable to non-terminal interfaces....
@@ -313,6 +318,7 @@ class FilmBot:
     #Cleanup the infobox: add missing fields, correct data, remove typically unused params
     def infoboxCleanup(self, infobox):
       unusedFields = ""
+      country = ""
       infobox = infobox.replace("<br />", "<br>") #convert old style breaks to new style
       infobox = infobox.replace("<br/>", "<br>") #convert old style breaks to new style
       infobox = infobox.replace("<BR>", "<br>") #convert old style breaks to new style
@@ -395,6 +401,7 @@ class FilmBot:
                 #data = re.sub("<br>", ", ", data) Do I have to convert to commas?
                 data = self.removeWikilink(data)
                 tmp = filmfunctions.countryToTemplate(data)
+                country = data
                 if(data != tmp):
                   data = tmp
                   self.canEditPage = 1
@@ -407,7 +414,7 @@ class FilmBot:
               elif(field.split("=")[0].strip().lower() == "released" and re.search("{{filmdate.*?}}", data.lower())):
                 data = re.sub("filmdate", "Film date", data)
               elif(field.split("=")[0].strip().lower() == "released" and not re.search("{{film date.*?}}", data.lower()) and data.find("<br>") == -1):
-                tmp = self.formatDate(data)
+                tmp = self.formatDate(data, country)
                 if(data != tmp):
                   data = tmp
                   self.canEditPage = 1
@@ -481,7 +488,9 @@ class FilmBot:
       
     def addImdbInfo(self, infobox, movie):
       imdb.IMDb().update(movie, info=('release dates',)) #get the release date page
-      
+      country = ""
+      if movie.get('country'):
+        country = filmfunctions.countryToTemplate(movie.get('country')[0])
       for field in re.sub("<ref.*?/(ref)?>", " reference ", re.sub("{{.*}}", "template", infobox)).split("|"):
         data = ""
         try: field.split("=")[1]
@@ -528,7 +537,7 @@ class FilmBot:
               if movie.get('release dates'):
                 for date in movie.get('release dates')[0:1]:
                   date = date.split("::")[1] + "(" + date.split("::")[0] + ")"
-                  data += self.formatDate(date) + "+"
+                  data += self.formatDate(date, country) + "+"
                 infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "writer"):
               if movie.get('writer'):
@@ -554,7 +563,7 @@ class FilmBot:
 
       return infobox
 
-    def formatDate(self, data):
+    def formatDate(self, data, country):
       month = "" #initialize so if they are not used prints empty in template
       day = "" 
       options = ""
@@ -580,13 +589,13 @@ class FilmBot:
       if(len(justDate.split()) == 3):
         format = re.sub("[0-9]{1,2}", "%d", re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", justDate))) #convert what is in the data field to what format it is in datetime.
         date = datetime.strptime(justDate, format) #convert to date
-        month = str(date.month)
-        day = str(date.day)
+        month = "|" + str(date.month)
+        day = "|" + str(date.day)
       #if it's only 2 it's usually a year and a month
       elif(len(justDate.split()) == 2):
         format = re.sub("[0-9]{4}", "%Y", re.sub("[A-Za-z]+", "%B", justDate)) #convert what is in the data field to what format it is in datetime.
         date = datetime.strptime(justDate, format) #convert to date
-        month = str(date.month)
+        month = "|" + str(date.month)
       #only 1 item is usually just the year
       elif(len(justDate.split()) == 1 and justDate.isdigit()):
         format = re.sub("[0-9]{4}", "%Y", justDate) #convert what is in the data field to what format it is in datetime.
@@ -596,10 +605,12 @@ class FilmBot:
       except AttributeError:
         place = ""
       else:
-        place = re.search("\([.A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
-      if(euDateRegex.search(justDate)): #if a EU date make the day appear first.
+        place = "|" + re.search("\([.A-Za-z ]+\)", data).group().replace(")", "").replace("(", "")
+        if filmfunctions.countryToTemplate(place[1:]) == country:
+          place = ""
+      if(euDateRegex.search(justDate) and not country == "{{Film US}}"): #if a EU date make the day appear first.
         options = "|df=y"
-      data = "{{Film date|"+str(date.year)+"|"+month+"|"+day+"|"+place+options+"}}"
+      data = "{{Film date|"+str(date.year)+month+day+place+options+"}}"
       if(month == "" or day == ""):
         data += "<!-- {{Film date|Year|Month|Day|Location}} -->"
       return data
