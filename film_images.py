@@ -5,6 +5,9 @@ The following parameters are supported:
 
 &params;
 
+-htm              Will create an html fil that has links for pages needing changes
+                  and links to image searches.
+
 All other parameters will be regarded as part of the title of a single page,
 and the bot will only work on that single page.
 """
@@ -21,6 +24,7 @@ import subprocess
 import Film
 import msvcrt
 import filmfunctions
+import imdb
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -59,12 +63,28 @@ class FilmImageBot:
     def kbfunc(self):
       return msvcrt.getch() if msvcrt.kbhit() else "Z"
       
-    def doNewImage(self, title, imdb):
-      filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), title)]), 1)
+    def doNewImage(self, title):
+      filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), title)]), True, False)
       filmBot.run()
-      spNotepad = subprocess.Popen("notepad C:\pywikipedia\log.txt")
-      spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+imdb)
-      spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.encode('utf-8', 'replace'))
+      dis = ""
+      movie = imdb.IMDb().get_movie(self.imdbNum)
+      if movie.get('year'):
+        year = movie.get('year')
+      if movie.get('distributors'):
+        pywikibot.output(str(len(movie.get('distributors'))))
+        for name in movie.get('distributors')[0:1]:
+          dis += name.get('name')
+      rationale = codecs.open('filmImages.txt', 'w', 'utf-8')
+      rationale.write('{{Non-free use rationale\n')
+      rationale.write('| Description       = Poster for \'\'[['+title+']]\'\', Copyright '+str(year)+' by '+dis+'. All Rights Reserved.\n')
+      rationale.write('| Source            = [ MoviePosterDB.com]\n')
+      rationale.write('| Article           = '+title+"\n")
+      rationale.write('| Portion           = Small portion of commercial product\n| Low_resolution    = Yes\n| Purpose           = Serves as "cover art" to identify the article\'s topic\n| Replaceability    = No\n| other_information = \n}}')
+      rationale.close
+      spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmImages.txt')
+
+      spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+self.imdbNum)
+      spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
       
     #def doHasImage(self, title):
       
@@ -79,7 +99,7 @@ class FilmImageBot:
             return
         pywikibot.output(title)
         
-        noSearch = 1;
+        noSearch = 0;
         ###FIND IF TEXT HAS IMAGE
         infoboxStart = text.find("Infobox film")
         #get infobox that is there.
@@ -129,7 +149,10 @@ class FilmImageBot:
                 ####HAS NEW IMAGE LOGIC#####
                 if not self.html:
                   #self.newImageDict[title.replace(" ", "_")] = self.imdbNum
-                  self.doNewImage(title.replace(" ", "_"), self.imdbNum)
+                  self.doNewImage(title)
+                  text = self.load(page.toggleTalkPage())
+                  text = text.replace("|needs-image=yes", "")
+                  self.save(text, page.toggleTalkPage(), "update film banner (has image)")
                 else:
                   self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a><br />'+"\n")
               else:
