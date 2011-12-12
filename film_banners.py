@@ -47,7 +47,7 @@ class FilmBannerBot:
         if pageText.lower().find("infobox television") == -1:
           return True
     elif not re.search("\{\{(wp|wikiproject)?.?film", talkText.lower()):
-      if pageText.lower().find("infobox television") == -1 and talkText.lower().find("wikiProject anime and manga") == -1:
+      if pageText.lower().find("infobox television") == -1 and talkText.lower().find("wikiproject anime and manga") == -1:
         return True
     return False
   
