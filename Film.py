@@ -98,8 +98,8 @@ class FilmBot:
         self.summary = ""
         
         #fix image_size
-        #if(re.search("image_size", text)):
-        #  text = pywikibot.replaceExcept(text, "image_size", "image size", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+        if(re.search("image_size", text)):
+          text = pywikibot.replaceExcept(text, "image_size", "image size", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         #fix awards heading to accolades
         #if(re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text)):
         #  pywikibot.output(re.sub(" *\w+ *", " Accolades ", re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text).group()))
@@ -610,6 +610,8 @@ class FilmBot:
           place = ""
       if(euDateRegex.search(justDate) and not country == "{{Film US}}"): #if a EU date make the day appear first.
         options = "|df=y"
+      if place != "" and month == "" and day == "":
+        place = "||" + place    
       data = "{{Film date|"+str(date.year)+month+day+place+options+"}}"
       if(month == "" or day == ""):
         data += "<!-- {{Film date|Year|Month|Day|Location}} -->"
