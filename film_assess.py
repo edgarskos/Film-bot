@@ -54,7 +54,13 @@ class FilmAssessBot:
     def treat(self, text, page):
         title = page.title()
         if not text:
-            return
+          talkText = self.load(page.toggleTalkPage())
+          if(re.search("\{\{(wikiproject film|film|wpfilm|wp film).*\}\}", talkText, re.I)): 
+            talkText = re.sub(r"\{\{(wikiproject film|film|wpfilm|wp film).*\}\}", "{{Film|class=Redirect}}", talkText, flags=re.IGNORECASE)
+          self.save(talkText, page.toggleTalkPage(), "Update film banner (Redirect)")
+          #spChrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/Talk:"+page.title().replace(" ", "_").encode('utf-8', 'replace'))
+          #choice = pywikibot.inputChoice(u'Redirect', ['Yes', 'No'], ['y', 'N'], 'N')
+          return
         pywikibot.output(title)
         
         task = ""
@@ -142,10 +148,9 @@ class FilmAssessBot:
           #pywikibot.output(banner)
           
           talkText = self.load(page.toggleTalkPage())
-          talkText = talkText.replace("|needs-image=yes", "")
           if(re.search("\{\{(wikiproject film|film|wpfilm).*\}\}", talkText, re.I)): 
-            talkText = re.sub(r"\{\{(wikiproject film|film|wpfilm).*\}\}", banner, talkText, flags=re.IGNORECASE)#talkText.replace("\{\{(wikiproject film|film).*\}\}", banner, re.I)
-          self.save(talkText, page.toggleTalkPage(), "update film banner")
+            talkText = re.sub(r"\{\{(wikiproject film|film|wpfilm).*\}\}", banner, talkText, flags=re.IGNORECASE)
+          self.save(talkText, page.toggleTalkPage(), "Update film banner ("+tempClass+")")
           #choice = pywikibot.inputChoice(u'Task force -> '+task+'?', ['Yes', 'No'], ['y', 'N'], 'N')
          
     def load(self, page):
