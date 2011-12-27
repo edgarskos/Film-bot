@@ -52,18 +52,40 @@ class FilmImageBot:
         self.hasImagestack = []
         self.newImageDict = dict()
         self.html = html
-        self.file = codecs.open('filmImages.html', 'w', 'utf-8')
+        #self.file = codecs.open('filmImages.html', 'w', 'utf-8')
 
     def run(self):
       for page in self.generator:
         text = self.load(page)
-        self.treat(text, page)
-
-    
+        code = self.treat(text, page)
+        title = page.title()
+        pywikibot.output(title)
+        if code == "has":
+          pywikibot.output("Already has image")
+          if not self.html:
+            ###ALREADY HAS IMAGE LOGIC#####
+            self.doHasImage(title, page.toggleTalkPage())
+          else:
+            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a><br />'+"\n")
+        elif code == "found":
+          pywikibot.output("YES!")
+          ####HAS NEW IMAGE LOGIC#####
+          if not self.html:
+            #self.newImageDict[title.replace(" ", "_")] = self.imdbNum
+            self.doNewImage(title, page.toggleTalkPage())
+          else:
+            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a><br />'+"\n")
+        elif code == "noimagefound":
+          pywikibot.output("No Image found -> IMDB = "+self.imdbNum)
+        elif code == "noimdb":
+          pywikibot.output("No IMDB link  " + self.imdbNum)
+        elif code == "noinfobox":
+          pywikibot.output("Page doesn't have an infobox")
+   
     def kbfunc(self):
       return msvcrt.getch() if msvcrt.kbhit() else "Z"
       
-    def doNewImage(self, title):
+    def doNewImage(self, title, talkPage):
       filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), title)]), True, False)
       filmBot.run()
       dis = ""
@@ -74,6 +96,24 @@ class FilmImageBot:
         pywikibot.output(str(len(movie.get('distributors'))))
         for name in movie.get('distributors')[0:1]:
           dis += name.get('name')
+
+      self.writeRationale(title, year, dis)
+      spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmImages.txt')
+
+      spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+self.imdbNum)
+      spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
+      
+      text = self.load(talkPage)
+      text = text.replace("|needs-image=yes", "")
+      self.save(text, talkPage, "update film banner (has image)")
+      
+    def doHasImage(self, title, talkPage):
+      Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
+      text = self.load(talkPage)
+      text = text.replace("|needs-image=yes", "")
+      self.save(text, talkPage, "update film banner (has image)")
+      
+    def writeRationale(self, title, year, dis):
       rationale = codecs.open('filmImages.txt', 'w', 'utf-8')
       rationale.write('{{Non-free use rationale\n')
       rationale.write('| Description       = Poster for \'\'[['+title+']]\'\', Copyright '+str(year)+' by '+dis+'. All Rights Reserved.\n')
@@ -81,23 +121,13 @@ class FilmImageBot:
       rationale.write('| Article           = '+title+"\n")
       rationale.write('| Portion           = Small portion of commercial product\n| Low_resolution    = Yes\n| Purpose           = Serves as "cover art" to identify the article\'s topic\n| Replaceability    = No\n| other_information = \n}}')
       rationale.close
-      spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmImages.txt')
-
-      spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+self.imdbNum)
-      spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
-      
-    #def doHasImage(self, title):
-      
-     # Chrome3 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Talk:"+title+"&action=edit")
-
+    
     def treat(self, text, page):
         """
         Loads the given page, does some changes, and saves it.
         """
-        title = page.title()
         if not text:
             return
-        pywikibot.output(title)
         
         noSearch = 0;
         ###FIND IF TEXT HAS IMAGE
@@ -123,18 +153,11 @@ class FilmImageBot:
               sys.exc_clear() #skip it if there is an index error, means it has no "=", invalid field
             else:
               if field.split("=")[0].strip() == "image" and not field.split("=")[1].strip() == "":
-                pywikibot.output("Already has image")
                 noSearch = 1
-                if not self.html:
-                  ###ALREADY HAS IMAGE LOGIC#####
-                  Chrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
-                  text = self.load(page.toggleTalkPage())
-                  text = text.replace("|needs-image=yes", "")
-                  self.save(text, page.toggleTalkPage(), "update film banner (has image)")
-                else:
-                  self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a><br />'+"\n")
-        elif(text.find(r"(i|I)nfobox") != -1): #infox doesn't exists
-          pywikibot.output("Page doesn't have an infobox")
+                return "has"
+        #if infobox doesn't exist
+        elif not (re.search("infobox film", text, re.I) or re.search("infobox_film", text, re.I) or re.search("infobox korean film", text, re.I) or re.search("infobox japanese film", text, re.I)):
+          return "noinfobox"
         
         if noSearch == 0 :
           if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
@@ -145,20 +168,11 @@ class FilmImageBot:
               s = f.read()
               f.close()
               if(s.find("No results") == -1):
-                pywikibot.output("YES!")
-                ####HAS NEW IMAGE LOGIC#####
-                if not self.html:
-                  #self.newImageDict[title.replace(" ", "_")] = self.imdbNum
-                  self.doNewImage(title)
-                  text = self.load(page.toggleTalkPage())
-                  text = text.replace("|needs-image=yes", "")
-                  self.save(text, page.toggleTalkPage(), "update film banner (has image)")
-                else:
-                  self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a><br />'+"\n")
+                return "found"
               else:
-                pywikibot.output("No Image -> IMDB = "+self.imdbNum)
+                return "noimagefound"
           else:
-            pywikibot.output("No IMDB link  " + self.imdbNum)
+            return "noimdb"
           
     def load(self, page):
       """

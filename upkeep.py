@@ -9,6 +9,9 @@ import wikipedia as pywikibot
 import pagegenerators
 import Film
 import film_banners as Banner
+import film_images as Images
+import film_assess as Assess
+import re
 
 def main():
   genFactory = pagegenerators.GeneratorFactory()
@@ -39,17 +42,30 @@ def main():
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(pagegenerators.PageWithTalkPageGenerator(gen))
-        filmBot = Film.FilmBot(gen, True, False)
+        filmBot = Film.FilmBot(gen, False, False)
         bannerBot = Banner.FilmBannerBot(gen)
+        imageBot = Images.FilmImageBot(gen, False)
+        assessBot = Assess.FilmAssessBot(gen)
+        code = "ok"
         for page in gen:
           if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1 and page.title().lower().find("category:") == -1):
             if not page.isTalkPage():
               pageText = filmBot.load(page)
+              title = page.title()
               filmBot.treat(page, pageText)
+              code = imageBot.treat(pageText, page)
             else:
               talkText = filmBot.load(page)
               if bannerBot.check2(talkText, pageText):
                 bannerBot.open(page)
+                pywikibot.output(code)
+              elif(pageText): #if bannerbot is not needed
+                if code == "has" and re.search("needs-image=yes", talkText):
+                  imageBot.doHasImage(title, page)
+                #elif (not (re.search(".jpg", pageText, re.I) or re.search(".gif", pageText, re.I) or re.search(".png", pageText, re.I) or re.search(".jpeg", pageText, re.I) or re.search(".tif", pageText, re.I))) and not re.search("needs-image=yes", talkText, re.I) and not re.search("class=list", talkText, re.I):
+                #  assessBot.treat(pageText, page.toggleTalkPage())
+                #elif code == "found" and re.search("needs-image=yes", talkText):
+                #  imageBot.doNewImage(title, page)
      
 if __name__ == "__main__":
     try:
