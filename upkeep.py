@@ -44,7 +44,7 @@ def main():
         gen = pagegenerators.PreloadingGenerator(pagegenerators.PageWithTalkPageGenerator(gen))
         filmBot = Film.FilmBot(gen, False, False)
         bannerBot = Banner.FilmBannerBot(gen)
-        imageBot = Images.FilmImageBot(gen, False)
+        imageBot = Images.FilmImageBot(gen, False, False)
         assessBot = Assess.FilmAssessBot(gen)
         code = "ok"
         for page in gen:
@@ -62,7 +62,7 @@ def main():
               elif(pageText): #if bannerbot is not needed
                 if code == "has" and re.search("needs-image=yes", talkText):
                   imageBot.doHasImage(title, page)
-                #elif (not (re.search(".jpg", pageText, re.I) or re.search(".gif", pageText, re.I) or re.search(".png", pageText, re.I) or re.search(".jpeg", pageText, re.I) or re.search(".tif", pageText, re.I))) and not re.search("needs-image=yes", talkText, re.I) and not re.search("class=list", talkText, re.I):
+                #elif (not (re.search("\.jpg", pageText, re.I) or re.search("\.gif", pageText, re.I) or re.search("\.png", pageText, re.I) or re.search("\.jpeg", pageText, re.I) or re.search("\.tif", pageText, re.I))) and not re.search("needs-image=yes", talkText, re.I) and not re.search("class=list", talkText, re.I):
                 #  assessBot.treat(pageText, page.toggleTalkPage())
                 #elif code == "found" and re.search("needs-image=yes", talkText):
                 #  imageBot.doNewImage(title, page)

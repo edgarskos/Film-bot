@@ -136,11 +136,11 @@ class FilmAssessBot:
               task = ""
           
           #see if it has an infobox
-          if not (re.search("infobox film", text, re.I) or re.search("infobox_film", text, re.I) or re.search("infobox korean film", text, re.I) or re.search("infobox japanese film", text, re.I)):
+          if not (re.search("infobox film", text, re.I) or re.search("infobox_film", text, re.I) or re.search("infobox korean film", text, re.I) or re.search("infobox japanese film", text, re.I) or re.search("infobox chinese film", text, re.I)):
             infobox = "|needs-infobox=yes"
           
           #see if it has an image
-          if not (re.search(".jpg", text, re.I) or re.search(".gif", text, re.I) or re.search(".png", text, re.I) or re.search(".jpeg", text, re.I) or re.search(".tif", text, re.I)):
+          if not (re.search("\.jpg", text, re.I) or re.search("\.gif", text, re.I) or re.search("\.png", text, re.I) or re.search("\.jpeg", text, re.I) or re.search("\.tif", text, re.I)):
             image = "|needs-image=yes"
           
           banner = "{{Film" + clas + task + image + infobox + "}}" #these powers combined, into a banner
