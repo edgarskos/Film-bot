@@ -7,6 +7,7 @@ The following parameters are supported:
 
 -htm              Will create an html fil that has links for pages needing changes
                   and links to image searches.
+-wiki             Print a list of possible results but in a wikiformat
 
 All other parameters will be regarded as part of the title of a single page,
 and the bot will only work on that single page.
@@ -37,7 +38,7 @@ class FilmImageBot:
     # The file containing these messages should have the same name as the caller
     # script (i.e. basic.py in this case)
 
-    def __init__(self, generator, html):
+    def __init__(self, generator, html, wiki):
         """
         Constructor. Parameters:
             @param generator: The page generator that determines on which pages
@@ -52,7 +53,8 @@ class FilmImageBot:
         self.hasImagestack = []
         self.newImageDict = dict()
         self.html = html
-        #self.file = codecs.open('filmImages.html', 'w', 'utf-8')
+        self.wiki = wiki
+        self.file = codecs.open('filmImages.html', 'w', 'utf-8')
 
     def run(self):
       for page in self.generator:
@@ -62,19 +64,23 @@ class FilmImageBot:
         pywikibot.output(title)
         if code == "has":
           pywikibot.output("Already has image")
-          if not self.html:
-            ###ALREADY HAS IMAGE LOGIC#####
-            self.doHasImage(title, page.toggleTalkPage())
-          else:
+          ###ALREADY HAS IMAGE LOGIC#####
+          if self.html:
             self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a><br />'+"\n")
+          elif self.wiki:
+            self.file.write("#"+page.title(asLink=True) + " has image\n")
+          else:
+            self.doHasImage(title, page.toggleTalkPage())
         elif code == "found":
           pywikibot.output("YES!")
           ####HAS NEW IMAGE LOGIC#####
-          if not self.html:
+          if self.html:
+            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a><br />'+"\n")
+          elif self.wiki:
+            self.file.write("#"+page.title(asLink=True) + ' [http://www.movieposterdb.com/search/?query='+self.imdbNum + " movieposterdb]\n")
+          else:
             #self.newImageDict[title.replace(" ", "_")] = self.imdbNum
             self.doNewImage(title, page.toggleTalkPage())
-          else:
-            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a><br />'+"\n")
         elif code == "noimagefound":
           pywikibot.output("No Image found -> IMDB = "+self.imdbNum)
         elif code == "noimdb":
@@ -236,6 +242,7 @@ def main():
     # The generator gives the pages that should be worked upon.
     gen = None
     html = False
+    wiki = False
     # This temporary array is used to read the page title if one single
     # page to work on is specified by the arguments.
     pageTitleParts = []
@@ -244,6 +251,8 @@ def main():
     for arg in pywikibot.handleArgs():
       if arg.startswith("-htm"):
         html = True
+      elif arg.startswith("-wiki"):
+        wiki = True
       else:
         if arg.startswith("-reg"):
           arg = '-cat:Film articles needing an image'
@@ -262,7 +271,7 @@ def main():
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(filmfunctions.PagesFromTalkPagesGenerator(gen))
-        bot = FilmImageBot(gen, html)
+        bot = FilmImageBot(gen, html, wiki)
         bot.run()
     else:
         pywikibot.showHelp()
