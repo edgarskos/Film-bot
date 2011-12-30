@@ -1,4 +1,4 @@
-chrome = "C:\Users\Pepp\AppData\Local\Google\Chrome\Application\chrome.exe"
+chrome = ""
 
 def getChrome():
   return chrome
