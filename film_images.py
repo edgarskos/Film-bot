@@ -26,6 +26,7 @@ import Film
 import msvcrt
 import filmfunctions
 import imdb
+import filmsettings
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.

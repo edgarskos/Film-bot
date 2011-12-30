@@ -25,6 +25,7 @@ import sys
 import codecs
 import subprocess
 import filmfunctions
+import filmsettings
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
