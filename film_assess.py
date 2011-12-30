@@ -21,6 +21,7 @@ import subprocess
 import Film
 import msvcrt
 import filmfunctions
+import filmsettings
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -42,7 +43,7 @@ class FilmAssessBot:
         """
         self.generator = generator
         self.imdbNum = "0"
-        self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
+        self.chrome = filmsettings.getChrome()
         # Set the edit summary message
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
 

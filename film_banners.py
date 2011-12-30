@@ -25,7 +25,7 @@ class FilmBannerBot:
 
   def __init__(self, generator):
     self.generator = generator
-    self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
+    self.chrome = filmsettings.getChrome()
     self.count = 0
     
   def run(self):

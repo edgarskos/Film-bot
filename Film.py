@@ -28,6 +28,7 @@ import difflib
 import codecs
 import itertools
 import subprocess
+import filmsettings
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -47,7 +48,7 @@ class FilmBot:
             * dry       - If True, doesn't do any real changes, but only shows
                           what would have been changed.
         """
-        self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
+        self.chrome = filmsettings.getChrome()
         self.generator = generator
         self.dry = dry
         self.html = html
@@ -262,7 +263,7 @@ class FilmBot:
             if self.html:
               self.filmLogLinks.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+page.title().replace(" ", "_")+'?action=edit">'+page.title()+'</a><br />'+"\n")
             elif self.dry:
-              spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmLog.diff')
+              spNotepad = subprocess.Popen('notepad filmLog.diff')
               spChrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
               choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
             
@@ -290,7 +291,7 @@ class FilmBot:
                   else:
                       return True
                 else:
-                  spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmLog.diff')
+                  spNotepad = subprocess.Popen('notepad filmLog.diff')
                   spChrome = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
                   choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
         return False

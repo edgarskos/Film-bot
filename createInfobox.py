@@ -48,7 +48,7 @@ class InfoboxBot:
         # Set the edit summary message
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
         
-        self.chrome = "C:\Documents and Settings\\Desktop\GoogleChromePortable\GoogleChromePortable.exe"
+        self.chrome = filmsettings.getChrome()
         self.img = img
         self.info = info
         self.imdb = imdb
