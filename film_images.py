@@ -109,6 +109,7 @@ class FilmImageBot:
 
       spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+self.imdbNum)
       spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
+      spChrome3 = subprocess.Popen(self.chrome+' '+"https://imdb.com/title/tt/"+self.imdbNum+"/companycredits")
       
       text = self.load(talkPage)
       text = text.replace("|needs-image=yes", "")
