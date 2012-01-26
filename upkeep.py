@@ -11,6 +11,7 @@ import Film
 import film_banners as Banner
 import film_images as Images
 import film_assess as Assess
+import createInfobox as Infobox
 import re
 
 def main():
@@ -46,6 +47,7 @@ def main():
         bannerBot = Banner.FilmBannerBot(gen)
         imageBot = Images.FilmImageBot(gen, False, False)
         assessBot = Assess.FilmAssessBot(gen)
+        infoboxBot = Infobox.InfoboxBot(gen, False, False, False)
         code = "ok"
         for page in gen:
           if(page.title().lower().find("user:") == -1 and page.title().lower().find("wikipedia talk:") == -1 and page.title().lower().find("category:") == -1):
@@ -64,8 +66,10 @@ def main():
                   imageBot.doHasImage(title, page)
                 #elif (not (re.search("\.jpg", pageText, re.I) or re.search("\.gif", pageText, re.I) or re.search("\.png", pageText, re.I) or re.search("\.jpeg", pageText, re.I) or re.search("\.tif", pageText, re.I))) and not re.search("needs-image=yes", talkText, re.I) and not re.search("class=list", talkText, re.I):
                 #  assessBot.treat(pageText, page.toggleTalkPage())
-                #elif code == "found" and re.search("needs-image=yes", talkText):
-                #  imageBot.doNewImage(title, page)
+                elif code == "found" and re.search("needs-image=yes", talkText):
+                  imageBot.doNewImage(title, page)
+                elif code == "noinfobox":
+                  infoboxBot.treat(page)
      
 if __name__ == "__main__":
     try:

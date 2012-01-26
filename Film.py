@@ -503,37 +503,58 @@ class FilmBot:
               if movie.has_key('director'):
                 for name in movie.get('director'):
                   data += "[[" + name['name'] + "]]+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                if len(movie.get('director')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" + re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "producer"):
               if movie.get('producer'):
                 for name in movie.get('producer')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                if len(movie.get('producer')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" +  re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "starring"):
               if movie.get('cast'):
                 for name in movie.get('cast')[0:4]:
                   data += "[[" + name['name'] + "]]+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                if len(movie.get('cast')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" + re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "music"):
               if movie.get('original music'):
                 for name in movie.get('original music')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                if len(movie.get('original music')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" + re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "cinematography"):
               if movie.get('cinematographer'):
                 for name in movie.get('cinematographer')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                if len(movie.get('cinematographer')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" + re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "editing"):
               if movie.get('editor'):
                 for name in movie.get('editor')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                if len(movie.get('editor')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" + re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "studio"):
               if movie.get('studio'):
                 for name in movie.get('studio')[0:2]:
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                if len(movie.get('studio')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" + re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "released"):
               if movie.get('release dates'):
                 for date in movie.get('release dates')[0:1]:
@@ -544,7 +565,10 @@ class FilmBot:
               if movie.get('writer'):
                 for name in movie.get('writer'):
                   data += name['name'] + "+"
-                infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + re.sub("\+", "<br>", data.rstrip("+")) + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
+                if len(movie.get('writer')) > 1:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + "{{Plainlist|\n*" + re.sub("\+", "\n*", data.rstrip("+")) + "}}" + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:]                 
+                else:
+                  infobox = infobox[:infobox.find("=", infobox.find(field.split("=")[0]))+2] + data.rstrip("+") + infobox[infobox.find("=", infobox.find(field.split("=")[0]))+2:] 
             elif(field.split("=")[0].strip() == "runtime"):
               if movie.get('runtime'):
                 try: 

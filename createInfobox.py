@@ -151,13 +151,13 @@ class InfoboxBot:
               start += 1
           text = filmBot.standardFixes(text)
           text = text[:start] +newBox + "\n" + text[start:]
+          spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
           if self.save(text, page, "add infobox"):
             text = self.load(page.toggleTalkPage())
             text = text.replace("|needs-infobox=yes", "")
             self.save(text, page.toggleTalkPage(), "update film banner (has infobox)")
           else:
             spNotepad = subprocess.Popen("notepad C:\pywikipedia\logInfobox.txt")
-            spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+page.title().replace(" ", "_").encode('utf-8', 'replace')+"?action=edit")
             choice = pywikibot.inputChoice("This is a wait", ['Yes', 'No'], ['y', 'N'], 'N')
       else:
         pywikibot.output("HAS Infobox")
