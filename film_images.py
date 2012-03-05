@@ -49,6 +49,7 @@ class FilmImageBot:
         self.generator = generator
         self.imdbNum = "0"
         self.chrome = filmsettings.getChrome()
+        self.installDir = filmsettings.getInstallDir()
         # Set the edit summary message
         self.summary = i18n.twtranslate(pywikibot.getSite(), 'basic-changing')
         self.hasImagestack = []
@@ -76,7 +77,7 @@ class FilmImageBot:
           pywikibot.output("YES!")
           ####HAS NEW IMAGE LOGIC#####
           if self.html:
-            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a><br />'+"\n")
+            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a> -> <a href="http://imdb.com/title/tt'+self.imdbNum+'/companycredits">IMDB</a>'+'<br />'+"\n")
           elif self.wiki:
             self.file.write("#"+page.title(asLink=True) + ' [http://www.movieposterdb.com/search/?query='+self.imdbNum + " movieposterdb]\n")
           else:
@@ -105,7 +106,7 @@ class FilmImageBot:
           dis += name.get('name')
 
       self.writeRationale(title, year, dis)
-      spNotepad = subprocess.Popen('notepad C:\pywikipedia\\filmImages.txt')
+      spNotepad = subprocess.Popen('notepad '+ self.installDir + '\\filmImages.txt')
 
       spChrome = subprocess.Popen(self.chrome+' '+"http://www.movieposterdb.com/search/?query="+self.imdbNum)
       spChrome2 = subprocess.Popen(self.chrome+' '+"https://secure.wikimedia.org/wikipedia/en/wiki/"+title.replace(" ", "_").encode('utf-8', 'replace'))
