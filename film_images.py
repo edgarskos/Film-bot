@@ -56,6 +56,7 @@ class FilmImageBot:
         self.newImageDict = dict()
         self.html = html
         self.wiki = wiki
+        self.imdb = False
         self.file = codecs.open('filmImages.html', 'w', 'utf-8')
 
     def run(self):
@@ -77,7 +78,7 @@ class FilmImageBot:
           pywikibot.output("YES!")
           ####HAS NEW IMAGE LOGIC#####
           if self.html:
-            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="+http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a> -> <a href="http://imdb.com/title/tt'+self.imdbNum+'/companycredits">IMDB</a>'+'<br />'+"\n")
+            self.file.write('<a href="https://secure.wikimedia.org/wikipedia/en/wiki/'+title.replace(" ", "_")+'">'+title+'</a> -> <a href="http://www.movieposterdb.com/search/?query='+self.imdbNum+'">Image</a> -> <a href="http://imdb.com/title/tt'+self.imdbNum+'/companycredits">IMDB</a>'+'<br />'+"\n")
           elif self.wiki:
             self.file.write("#"+page.title(asLink=True) + ' [http://www.movieposterdb.com/search/?query='+self.imdbNum + " movieposterdb]\n")
           else:
@@ -172,17 +173,22 @@ class FilmImageBot:
           if re.subn("{{imdb title.*?}}", "", text.lower())[1] == 1: #If there is only 1 imdb link on the page search for the info
             if re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()):
               self.imdbNum = re.search("[0-9]{6,7}", re.search("{{imdb title.*?}}", text.lower()).group()).group()
+          elif self.imdb:
+            self.imdbNum = pywikibot.input(page.title() + ": input IMDB num")
+          else:
+            self.imdbNum = "0"
           
-              f = urllib.urlopen("http://www.movieposterdb.com/search/?query="+self.imdbNum)
-              s = f.read()
-              f.close()
-              if(s.find("No results") == -1):
-                return "found"
-              else:
-                return "noimagefound"
+          if self.imdbNum != "0":
+            f = urllib.urlopen("http://www.movieposterdb.com/search/?query="+self.imdbNum)
+            s = f.read()
+            f.close()
+            if(s.find("No results") == -1):
+              return "found"
+            else:
+              return "noimagefound"
           else:
             return "noimdb"
-          
+        
     def load(self, page):
       """
       Loads the given page, does some changes, and saves it.
