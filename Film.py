@@ -99,8 +99,8 @@ class FilmBot:
         self.summary = ""
         
         #fix image_size
-        if(re.search("image_size", text)):
-          text = pywikibot.replaceExcept(text, "image_size", "image size", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
+        #if(re.search("image_size", text)):
+        #  text = pywikibot.replaceExcept(text, "image_size", "image size", ['comment', 'includeonly', 'math', 'noinclude', 'nowiki', 'pre', 'source', 'ref', 'timeline'])
         #fix awards heading to accolades
         #if(re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text)):
         #  pywikibot.output(re.sub(" *\w+ *", " Accolades ", re.search("([\r\n]|^)\=+ *(A|a)wards *\=+", text).group()))
@@ -447,8 +447,8 @@ class FilmBot:
       #  newBox = self.addImdbInfo(newBox, imdb.IMDb().get_movie(self.imdbNum))
         
       #remove typically unused parameters
-      if re.search("\| image size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-        newBox = re.sub("\| image size *=.*?\n", "", newBox)
+      if re.search("\| image_size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+        newBox = re.sub("\| image_size *=.*?\n", "", newBox)
       if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
         newBox = re.sub("\| narrator *=.*?\n", "", newBox)
       if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :

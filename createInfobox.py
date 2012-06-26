@@ -105,8 +105,8 @@ class InfoboxBot:
           newBox = self.addNewInfo(newBox, page.title(), movie)
                 
           #remove typically unused parameters
-          if re.search("\| image size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
-            newBox = re.sub("\| image size *=.*?\n", "", newBox)
+          if re.search("\| image_size *=.*?\n", newBox).group().split("=")[1].strip() == "" :
+            newBox = re.sub("\| image_size *=.*?\n", "", newBox)
           if re.search("\| narrator *=.*?\n", newBox).group().split("=")[1].strip() == "" :
             newBox = re.sub("\| narrator *=.*?\n", "", newBox)
           if re.search("\| border *=.*?\n", newBox).group().split("=")[1].strip() == "" :

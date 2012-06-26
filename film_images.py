@@ -95,8 +95,8 @@ class FilmImageBot:
       return msvcrt.getch() if msvcrt.kbhit() else "Z"
       
     def doNewImage(self, title, talkPage):
-      filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), title)]), True, False)
-      filmBot.run()
+      #filmBot = Film.FilmBot(iter([pywikibot.Page(pywikibot.getSite(), title)]), True, False)
+      #filmBot.run()
       dis = ""
       movie = imdb.IMDb().get_movie(self.imdbNum)
       if movie.get('year'):
@@ -139,7 +139,7 @@ class FilmImageBot:
         if not text:
             return
         
-        noSearch = 0;
+        noSearch = -1;
         ###FIND IF TEXT HAS IMAGE
         infoboxStart = text.find("Infobox film")
         #get infobox that is there.
